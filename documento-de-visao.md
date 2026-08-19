@@ -16,9 +16,9 @@ A Pizzaria está em fase de crescimento, o seu atendimento é realizado via What
 
 | Perfil | Quem é | O que faz no sistema |
 |---|---|---|
-| Funcionário | Atendente/Colaborador, responsável pelo recebimento e acompanhamento dos pedidos | Visualiza, confirma pedidos, atualiza status, consulta informações e auxilia em atendimentos |
+| Funcionário | Atendente/Colaborador, responsável pelo recebimento e acompanhamento dos pedidos | Visualiza, confirma pedidos, atualiza status, consulta informações e auxilia em atendimentos 
 
-| Gerente | Responsável pela gestão | gerencia produtos, categorias, ingredientes, consulta relatórios de vendas e acompanha pedidos |
+| Gerente | Responsável pela gestão | gerencia produtos, categorias, ingredientes, consulta relatórios de vendas e acompanha pedidos 
 
 ## 3. Visão da solução
 
@@ -49,28 +49,28 @@ O sistema será uma aplicação web para centralizar o processo de realização 
 ## 6. Requisitos mínimos do §3 do Manual — como este projeto cobre cada um
 | Requisito mínimo | Como este projeto cobre |
 |---|---|
-| Autenticação com 2+ perfis | Sistema de autenticação com perfis de Funcionário e Gerente, cada um com permissões específicas. |
+| Autenticação com 2+ perfis | Sistema de autenticação com perfis de Funcionário e Gerente, cada um com permissões específicas. 
 
-| 6+ entidades com relacionamento N:N |  Usuário, Funcionário, Gerente, Produto, Categoria, Ingrediente, Pedido, ItemPedido o relacionamento N:N ocorre em por exemplo Produto e Ingrediente. |
+| 6+ entidades com relacionamento N:N |  Usuário, Funcionário, Gerente, Produto, Categoria, Ingrediente, Pedido, ItemPedido o relacionamento N:N ocorre em por exemplo Produto e Ingrediente. 
 
-| Regra de negócio não trivial | Controle de disponibilidade dos produtos baseado nos ingredientes em estoque e validação d fluxo de status dos pedidos. |
+| Regra de negócio não trivial | Controle de disponibilidade dos produtos baseado nos ingredientes em estoque e validação d fluxo de status dos pedidos. 
 
-| Consulta agregada (relatório/dashboard) | Dashboard/relatórios com informações como quantidade de pedidos, faturamento, produtos mais vendidos e vendas por período. |
+| Consulta agregada (relatório/dashboard) | Dashboard/relatórios com informações como quantidade de pedidos, faturamento, produtos mais vendidos e vendas por período. 
 
-| Validações em interface e banco | Validação de campos obrigatórios, valores, quantidades, dados de pedido e regras de integridade no banco de dados. |
+| Validações em interface e banco | Validação de campos obrigatórios, valores, quantidades, dados de pedido e regras de integridade no banco de dados. 
 
-| Deploy público por URL | Deploy planejado na Vercel (a confirmar na E4) |
+| Deploy público por URL | Deploy planejado na Vercel (a confirmar na E4) 
 
-| Repositório Git com README |  |
+| Repositório Git com README | https://github.com/Gabrielfreireflores/Projeto-pizzaria/ |
 
 ## 7. Riscos identificados
 | Risco | Impacto | Mitigação |
 |---|---|---|
-| Escopo maior que a capacidade da equipe no semestre | Ataso ou entrega incompleta do MVP | Priorizar funcionalidades essenciais e definir claramente o que ficará fora do escopo.|
+| Escopo maior que a capacidade da equipe no semestre | Ataso ou entrega incompleta do MVP | Priorizar funcionalidades essenciais e definir claramente o que ficará fora do escopo.
 
-| Mudança nos requisitos durante o desenvolvimento | Retrabalho e atraso nas Sprints | Validação dos requisitos e do fluxo principal com o responsável pela pizzaria antes do desenvolvimento e registrar as mudanças.|
+| Mudança nos requisitos durante o desenvolvimento | Retrabalho e atraso nas Sprints | Validação dos requisitos e do fluxo principal com o responsável pela pizzaria antes do desenvolvimento e registrar as mudanças.
 
-| Dificuldade na integração dos módulos do sistema | Falhas no fluxo de realização e recebimento de pedidos | Definir as responsabilidades de cada componente e realizar testes na integração e implementação de cada um.|
+| Dificuldade na integração dos módulos do sistema | Falhas no fluxo de realização e recebimento de pedidos | Definir as responsabilidades de cada componente e realizar testes na integração e implementação de cada um.
 
 # Uso de Inteligência Artificial
 
