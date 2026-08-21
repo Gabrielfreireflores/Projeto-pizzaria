@@ -1,6 +1,6 @@
 # Documento de Visão — Aplicação Web para Pedidos e Gestão da Pizzaria do Barriga
 
-**Equipe:** Gabriel Freire Flôres (RA 2840482423010) — Milene Fernanda Araujo Pereira (RA 2840482423044) — Marcelo Augusto Oliveira Jose (RA 2840482423043) — Christian de Lima (RA 2840482523031) — Guilherme Fabiano da Silva Gomes (RA 2840482423037)
+**Equipe:** Gabriel Freire Flôres (RA 2840482423010) — Marcelo Augusto Oliveira Jose (RA 2840482423043) — Christian de Lima (RA 2840482523031) — Guilherme Fabiano da Silva Gomes (RA 2840482423037)
 
 **Trilha:** B (Cliente real nº 1)
 
