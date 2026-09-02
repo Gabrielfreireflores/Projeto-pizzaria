@@ -29,9 +29,9 @@ Os funcionários terão acesso a uma área interna na qual poderão acompanhar o
 
 ## 4. Objetivos do MVP
 
-- Reduzir o tempo médio entre a realização do pedido e seu encaminhamento para a cozinha, eliminando a necessidade de transcrição manual dos pedidos.
-- Reduzir a ocorrência de erros de interpretação dos pedidos, permitindo que as informações sejam inseridas pelo próprio cliente diretamente na aplicação e cheguem à equipe da pizzaria de forma estruturada.
-- Centralizar o acompanhamento dos pedidos e das informações de vendas, automatizando processos, garantindo a integridade dos dados e proporcionando relatórios confiáveis para melhorar o controle das operações do comércio.
+- **Antes:** o pedido depende de transcrição manual até chegar à cozinha, atrasando seu encaminhamento. **Depois:** o pedido é encaminhado de forma estruturada pelo sistema, eliminando a transcrição manual e reduzindo o tempo até chegar à cozinha.
+- **Antes:** as informações do pedido são anotadas por um atendente, sujeitas a erros de interpretação no alto volume. **Depois:** as informações são inseridas pelo próprio cliente diretamente na aplicação e chegam à equipe da pizzaria de forma estruturada, reduzindo erros de interpretação.
+- **Antes:** o acompanhamento dos pedidos e das informações de vendas é feito de forma manual e descentralizada. **Depois:** o acompanhamento é centralizado e automatizado, com integridade dos dados garantida e relatórios confiáveis para o controle das operações do comércio.
 
 ## 5. Fora de escopo
 

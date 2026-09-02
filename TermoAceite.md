@@ -26,20 +26,18 @@
 ## 3. Stack tecnológica definida
 | Camada | Tecnologia |
 |---|---|
-| Frontend | *(Next.js + TypeScript + Tailwind + shadcn/ui)* |
-| Backend | *(Python + Flask)* |
-| Banco de dados | *(PostgreSQL)* |
+| Frontend | Next.js + TypeScript + Tailwind + shadcn/ui |
+| Backend | Python + Flask |
+| Banco de dados | PostgreSQL |
 | Deploy | Vercel |
-
-> Observação: o Documento de Visão já define o deploy na Vercel, a confirmar na E4. As demais camadas ainda não foram definidas nos documentos enviados — preencher antes da assinatura.
 
 ## 4. Papéis iniciais da equipe (Sprint 1)
 | Integrante | Papel |
 |---|---|
-| Gabriel Freire Flôres (RA 2840482423010) | *(Product Owner | Desenvolvedor Frontend)* |
-| Marcelo Augusto Oliveira Jose (RA 2840482423043) | *(Dados | Desenvolvedor Backend)* |
-| Christian de Lima (RA 2840482523031) | *(Desenvolvedor Frontend | Dados)* |
-| Guilherme Fabiano da Silva Gomes (RA 2840482423037) | *(Dados | Desenvolvedor Backend | Squad Leader)* |
+| Gabriel Freire Flôres (RA 2840482423010) | Product Owner |
+| Marcelo Augusto Oliveira Jose (RA 2840482423043) | Dados |
+| Christian de Lima (RA 2840482523031) | Desenvolvedor Frontend |
+| Guilherme Fabiano da Silva Gomes (RA 2840482423037) | Dados |
 
 ## 5. Aprovação
 - Professor: _______________________ Data: ___/___/____
