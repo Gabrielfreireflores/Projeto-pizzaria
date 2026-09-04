@@ -1,5 +1,10 @@
 # Diagramas UML — Pizzaria do Barriga
 
+**Equipe:** Gabriel Freire Flôres (RA 2840482423010) — Marcelo Augusto Oliveira Jose (RA 2840482423043) — Christian de Lima (RA 2840482523031) — Guilherme Fabiano da Silva Gomes (RA 2840482423037)
+**Trilha:** B (Cliente real nº 1)
+
+
+
 ## 1. Diagrama de Casos de Uso
 
 ```mermaid
@@ -97,7 +102,10 @@ classDiagram
 
     class Pedido {
         -id: Integer
-        -preco: decimal
+        -dataHoraPedido: DateTime
+        -formaPagamento: String
+        -taxaEntrega: decimal
+        -valorTotal: decimal
         +getId(): Integer
         +alteraStatus(novoStatus: String)
     }
@@ -113,7 +121,7 @@ classDiagram
         +exibirObservacao(): String
     }
 
-    class StatusPedido {
+    class Status {
         -id: Integer
         -descricao: String
         -ordem: Integer
@@ -121,7 +129,7 @@ classDiagram
         +getDescricao(): String
     }
 
-    class EnderecoEntrega {
+    class Endereco {
         -id: Integer
         -rua: String
         -bairro: String
@@ -134,24 +142,24 @@ classDiagram
         +adicionarReferencia(): String
     }
 
-    class InfoFormaPagamento {
+    class IngredienteProduto {
         -id: Integer
-        -descricao: String
-        +getId(): Integer
-        +getDescricao(): String
+        -quantidadeNecessaria: decimal
     }
 
     Usuario <|-- Funcionario
     Usuario <|-- Cliente
 
     Categoria "1" --> "0..*" Produto
-    Produto "0..*" -- "1..*" Ingrediente
+    Produto "1" --> "0..*" IngredienteProduto
+    Ingrediente "1" --> "0..*" IngredienteProduto
+    Cliente "1" --> "0..*" Endereco
     Cliente "1" --> "0..*" Pedido
+    Funcionario "1" --> "0..*" Pedido
     Pedido "1" --> "1..*" ItemPedido
     Produto "1" --> "0..*" ItemPedido
-    StatusPedido "1" --> "0..*" Pedido
-    EnderecoEntrega "1" --> "0..*" Pedido
-    InfoFormaPagamento "1" --> "0..*" Pedido
+    Status "1" --> "0..*" Pedido
+    Endereco "1" --> "0..*" Pedido
 ```
 
 ## 3. Rastreabilidade

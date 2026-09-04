@@ -1,5 +1,9 @@
 # DER — Pizzaria do Barriga
 
+**Equipe:** Gabriel Freire Flôres (RA 2840482423010) — Marcelo Augusto Oliveira Jose (RA 2840482423043) — Christian de Lima (RA 2840482523031) — Guilherme Fabiano da Silva Gomes (RA 2840482423037)
+**Trilha:** B (Cliente real nº 1)
+
+
 ## 1. Diagrama
 
 ```mermaid
