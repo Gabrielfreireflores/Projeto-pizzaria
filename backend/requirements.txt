@@ -1,3 +1,4 @@
+# Dependencias existentes preservadas
 blinker==1.9.0
 click==8.1.8
 Flask==3.1.3
@@ -7,3 +8,8 @@ Jinja2==3.1.6
 MarkupSafe==3.0.3
 Werkzeug==3.1.8
 zipp==3.23.1
+
+# PostgreSQL, configuracao local e acesso do frontend a API
+psycopg[binary]==3.3.5
+python-dotenv==1.2.3
+Flask-Cors==6.0.5
