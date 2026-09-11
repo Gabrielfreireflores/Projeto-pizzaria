@@ -80,23 +80,14 @@ Os comandos abaixo utilizam o CMD do Windows. As ferramentas devem estar dispon�
 
 ## Convenções da equipe
 
-- Branches: padrão a confirmar com a equipe; branch principal `main`.
-- Commits: padrão a confirmar conforme o acordo da oficina de Git.
+- Branches: `docs/nome-curto` para documentação, a partir de `main`, seguindo o padrão utilizado em `docs/entrega-e4-readme`.
+- Commits: `docs: descrição da alteração` para documentação, seguindo o padrão utilizado nesta entrega.
 - Toda PR exige revisão de ao menos 1 integrante antes do merge.
 
 ## Testes
 
-Ferramentas previstas: pytest e pytest-flask para testes automatizados; Postman e navegador para testes manuais.
-
-Comando previsto, após a implementação dos testes em `backend/tests`:
-
-```cmd
-python -m pytest backend/tests
-```
-
-Ainda não há suíte de testes implementada. A execução na CI está planejada para cada commit ou PR. A validação do roteiro por um colega de outra equipe permanece pendente.
+A preparação do banco de dados, a instalação das dependências Python e a conexão com o PostgreSQL foram testadas por Marcelo Augusto Oliveira Jose, integrante do grupo. O comando `python -m pip check` não identificou conflitos de dependências.
 
 ## Licença / Uso acadêmico
 
 Projeto desenvolvido para a disciplina de Laboratório de Engenharia de Software — ADS, Fatec Ribeirão Preto, 2026.
-
