@@ -53,7 +53,7 @@ Os comandos abaixo utilizam o CMD do Windows. As ferramentas devem estar dispon�
    |---|---|
    | `DATABASE_URL` | String de conexão com o PostgreSQL, ex.: `postgresql://postgres:SUA_SENHA@localhost:5432/pizzaria` |
 
-   Não envie o arquivo `.env` com credenciais reais ao GitHub. A leitura dessa variável pela aplicação será implementada junto ao backend; os comandos SQL abaixo utilizam parâmetros explícitos.
+
 
 4. Crie um banco vazio e execute o schema:
 
@@ -64,7 +64,7 @@ Os comandos abaixo utilizam o CMD do Windows. As ferramentas devem estar dispon�
 
    Informe a senha do usuário `postgres` quando solicitada. Execute o script uma única vez em um banco vazio.
 
-5. O seed já está incluído em `db/schema.sql`; não há migrations ou comandos adicionais de carga. Os usuários de exemplo possuem hashes fictícios, sem credenciais válidas para login.
+5. O seed já está incluído em `db/schema.sql`.
 
 6. A inicialização da aplicação ainda não está disponível: o backend não foi implementado e a interface está em prototipação no Figma. Nesta versão, é possível preparar o banco e instalar as dependências.
 
