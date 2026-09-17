@@ -1,0 +1,40 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 40 46% 96%;
+    --foreground: 20 20% 13%;
+    --char: 20 20% 13%;
+    --border: 30 20% 88%;
+    --muted: 35 30% 93%;
+    --muted-foreground: 20 10% 40%;
+
+    --brick: 5 62% 44%;
+    --brick-dark: 5 60% 30%;
+    --crust: 38 72% 58%;
+    --basil: 95 25% 27%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-background text-foreground font-body antialiased;
+  }
+
+  h1, h2, h3, h4 {
+    @apply font-display;
+  }
+
+  :focus-visible {
+    outline: 2px solid hsl(var(--brick));
+    outline-offset: 2px;
+  }
+}
