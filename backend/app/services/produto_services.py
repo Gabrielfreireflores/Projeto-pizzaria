@@ -1,8 +1,8 @@
 from psycopg.errors import ForeignKeyViolation, UniqueViolation
 
-from app.repositories.produto_repository import buscar_funcionario_por_usuario as buscar_funcionario_repository
+from app.repositories.funcionario_repository import buscar_funcionario_por_usuario as buscar_funcionario_repository
 from app.repositories.produto_repository import criar_produto as criar_produto_repository
-from app.schemas.produto_schema import validar_produto
+from app.schemas.produto_schema import validar_produto as validar_produto_schema
 
 
 class ProdutoDuplicado(ValueError):
@@ -15,7 +15,7 @@ def criar_produto(data: dict, id_usuario: int):
             or funcionario[1] != 'funcionario' or funcionario[2] is None):
         raise PermissionError('Acesso exclusivo de funcionário ativo.')
 
-    produto = validar_produto(data)
+    produto = validar_produto_schema(data)
     try:
         resultado = criar_produto_repository(produto)
     except ForeignKeyViolation:
