@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { Menu, X, ShoppingBag, User } from "lucide-react";
+import { useCart } from "@/hooks/use-cart";
 
 const NAV_LINKS = [
   { href: "#cardapio", label: "Cardápio" },
@@ -13,6 +14,7 @@ const NAV_LINKS = [
 
 export function Navbar() {
   const [open, setOpen] = useState(false);
+  const { itemCount } = useCart();
 
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur">
@@ -50,13 +52,18 @@ export function Navbar() {
           >
             <User className="h-5 w-5" />
           </Link>
-          <button
-            type="button"
+          <Link
+            href="/carrinho"
             aria-label="Ver sacola"
-            className="flex h-10 w-10 items-center justify-center rounded-sm text-char/80 transition-colors hover:bg-char/5 hover:text-brick"
+            className="relative flex h-10 w-10 items-center justify-center rounded-sm text-char/80 transition-colors hover:bg-char/5 hover:text-brick"
           >
             <ShoppingBag className="h-5 w-5" />
-          </button>
+            {itemCount > 0 && (
+              <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-brick px-1 text-[10px] font-semibold leading-none text-background">
+                {itemCount}
+              </span>
+            )}
+          </Link>
           <button
             type="button"
             aria-label={open ? "Fechar menu" : "Abrir menu"}
