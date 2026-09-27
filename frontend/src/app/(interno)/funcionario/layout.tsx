@@ -36,12 +36,27 @@ export default function FuncionarioLayout({
             <aside className="flex h-screen w-64 flex-col border-r border-border bg-muted/40 px-5 py-6">
               <div className="border-b border-border pb-5">
                 <Link href="/" className="block">
-                  <p className="font-display text-xl font-semibold text-brick">
-                    Pizzaria do Barriga
-                  </p>
-                  <p className="mt-1 text-xs text-muted-foreground">
+                  
+                  {/* Logo + nome */}
+                  <div className="flex items-center gap-3">
+                    <img
+                      src="/logo.png"
+                      alt="Logo da Pizzaria do Barriga"
+                      className="h-10 w-10 shrink-0 rounded-full object-cover"
+                    />
+
+                    <p className="font-display text-xl font-semibold leading-tight text-brick">
+                      Pizzaria
+                      <br />
+                      do Barriga
+                    </p>
+                  </div>
+
+                  {/* Subtítulo */}
+                  <p className="mt-2 ml-[52px] text-xs text-muted-foreground">
                     Área do funcionário
                   </p>
+
                 </Link>
               </div>
 
