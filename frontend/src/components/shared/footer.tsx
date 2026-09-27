@@ -12,7 +12,7 @@ export function Footer() {
           </p>
           <p className="mt-2 flex items-center gap-2 text-sm">
             <MapPin className="h-4 w-4" />
-            Jardinópolis-SP
+            R. Irene Rotta Fernandes, Jardinópolis-SP
           </p>
         </div>
 
@@ -20,19 +20,16 @@ export function Footer() {
           <p className="text-sm font-medium text-background">Contato</p>
           <p className="mt-2 flex items-center gap-2 text-sm">
             <Phone className="h-4 w-4" />
-            (16) 0000-0000
+            (16) 98200-9554
           </p>
-          <p className="mt-1 text-sm">contato@pizzariadobarriga.com.br</p>
+          <p className="mt-1 text-sm">pizzariabarriga123@gmail.com</p>
         </div>
 
         <div>
           <p className="text-sm font-medium text-background">Redes sociais</p>
           <div className="mt-2 flex items-center gap-4">
-            <a href="#" aria-label="Instagram" className="hover:text-background">
+            <a href="https://www.instagram.com/barriga_pizzaria/" aria-label="Instagram" className="hover:text-background">
               <Instagram className="h-5 w-5" />
-            </a>
-            <a href="#" aria-label="Facebook" className="hover:text-background">
-              <Facebook className="h-5 w-5" />
             </a>
           </div>
         </div>
