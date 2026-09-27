@@ -82,7 +82,7 @@ export default function EditarProdutoPage() {
 
           <Link
             href="/funcionario/produtos"
-            className="text-sm font-medium text-muted-foreground transition hover:text-brick"
+            className="rounded-lg bg-brick px-4 py-2.5 text-sm font-semibold text-background transition hover:bg-brick-dark"
           >
             Voltar
           </Link>

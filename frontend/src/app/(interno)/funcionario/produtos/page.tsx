@@ -44,7 +44,7 @@ export default function ProdutosPage() {
               <tr key={produto.id} className="border-b border-border last:border-0">
                 <td className="px-5 py-3">
                   <img
-                    src={produto.imagemUrl || "/produtos/placeholder.jpg"}
+                    src="/produtos/image.png"
                     alt={produto.nome}
                     className="h-10 w-14 rounded-md object-cover"
                   />
