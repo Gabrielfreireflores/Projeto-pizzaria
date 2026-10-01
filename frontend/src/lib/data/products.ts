@@ -47,21 +47,39 @@ export const products: Product[] = [
       "https://images.unsplash.com/photo-1554866585-cd94860890b7?w=600&q=80",
   },
   {
-    id: "bebida-guarana-lata",
+    id: "bebida-coca-2l",
     category: "bebida",
-    name: "Guaraná Antarctica Lata",
-    description: "350ml, bem gelada.",
+    name: "Refrigerante Coca-cola 2L",
+    description: "",
     price: 6.5,
     image:
-      "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=600&q=80",
+      "/coca2l.png",
   },
   {
-    id: "bebida-suco-laranja",
+    id: "bebida-sprite-2l",
     category: "bebida",
-    name: "Suco de Laranja Natural",
-    description: "500ml, feito na hora.",
+    name: "Refrigerante Sprite 2l",
+    description: "",
     price: 9.9,
     image:
-      "https://images.unsplash.com/photo-1613478223719-2ab802602423?w=600&q=80",
+      "/sprite2l.png",
+  },
+  {
+    id: "bebida-fanta-laranja-2l",
+    category: "bebida",
+    name: "Refrigerante Fanta Laranja 2l",
+    description: "",
+    price: 9.9,
+    image:
+      "/fanta2l.png",
+  },
+  {
+    id: "bebida-jaboti-guaraná-2l",
+    category: "bebida",
+    name: "Refrigerante Jaboti Guaraná 2l",
+    description: "",
+    price: 9.9,
+    image:
+      "/jaboti2l.png",
   },
 ];
