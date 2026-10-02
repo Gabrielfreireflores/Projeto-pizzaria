@@ -79,4 +79,4 @@ Participação comprovada na implementação técnica do frontend em ambas as Sp
 
 ## Observações
 
-Não estão sendo atribuídas a este integrante atividades de backend, banco de dados, UML/DER, plano de testes ou testes automatizados, por não haver comprovação de autoria dessas partes nestas Sprints. O conteúdo funcional da área de funcionário (páginas, hooks `use-funcionarios.tsx` e `use-produtos.tsx`) desenvolvido por Christian de Lima (commit `0fd8a98`, revertido em `ccbbdfc`, reintroduzido via PR #10) não é atribuído a este integrante como autoria — a atividade deste integrante nesse episódio se limitou à reconciliação de merge e validação de build.
+Nessas duas primeiras sprints não houve integração com backend, banco de dadosou testes automatizados no Frontend. O conteúdo funcional da área de funcionário (páginas, hooks `use-funcionarios.tsx` e `use-produtos.tsx`) desenvolvido por Christian de Lima (commit `0fd8a98`, revertido em `ccbbdfc`, reintroduzido via PR #10) não é atribuído a mim como autoria — a atividade minha nesse episódio se limitou à reconciliação de merge e validação de build.
