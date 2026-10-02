@@ -10,6 +10,9 @@ def criar_categoria(nome: str):
             categoria = cursor.fetchone()
             conn.commit()
             return categoria
+    except Exception:
+        conn.rollback()
+        raise
     finally:
         conn.close()
 
@@ -34,6 +37,9 @@ def buscar_categoria_por_nome(nome: str):
             )
             resultado = cursor.fetchone()
             return resultado
+    except Exception:
+        conn.rollback()
+        raise
     finally:
         conn.close()
 
@@ -46,6 +52,9 @@ def remover_categoria(nome: str):
             )
             conn.commit()
             return 1
+    except Exception:
+        conn.rollback()
+        raise
     finally:
         conn.close()
 
