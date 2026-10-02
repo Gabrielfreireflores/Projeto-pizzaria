@@ -26,13 +26,18 @@ def criar_pedido(conn, pedido: dict):
     with conn.cursor() as cursor:
         cursor.execute(
             """INSERT INTO pedido
-            (id_cliente, id_funcionario, id_status, id_endereco, forma_pagamento,
-             taxa_entrega, valor_total, nome_contato, telefone_contato)
-            VALUES (%s, NULL, %s, %s, %s, %s, %s, %s, %s)
+            (id_cliente, id_funcionario, id_status, id_endereco,
+             forma_pagamento, taxa_entrega, valor_total)
+            VALUES (%s, 1, %s, %s, %s, %s, %s)
             RETURNING id_pedido, data_hora_pedido""",
-            (pedido['id_cliente'], pedido['id_status'], pedido['id_endereco'],
-             pedido['forma_pagamento'], pedido['taxa_entrega'], pedido['valor_total'],
-             pedido['contato']['nome'], pedido['contato']['telefone'])
+            (
+                pedido['id_cliente'],
+                pedido['id_status'],
+                pedido['id_endereco'],
+                pedido['forma_pagamento'],
+                pedido['taxa_entrega'],
+                pedido['valor_total'],
+            )
         )
         return cursor.fetchone()
 
