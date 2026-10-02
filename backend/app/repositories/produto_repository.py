@@ -1,6 +1,34 @@
 from app.database import get_connection
 
 
+def listar_produtos():
+    conn = get_connection()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute(
+                """SELECT p.id_produto, p.nome, p.tamanho, p.preco, p.disponivel,
+                          c.id_categoria, c.nome, i.id_ingrediente, i.nome,
+                          ip.quantidade_necessaria, i.unidade_medida
+                FROM produto p JOIN categoria c ON c.id_categoria = p.id_categoria
+                LEFT JOIN ingrediente_produto ip ON ip.id_produto = p.id_produto
+                LEFT JOIN ingrediente i ON i.id_ingrediente = ip.id_ingrediente
+                ORDER BY p.id_produto, i.id_ingrediente"""
+            )
+            return cursor.fetchall()
+    finally:
+        conn.close()
+
+
+def buscar_produtos_para_pedido(conn, ids: list):
+    with conn.cursor() as cursor:
+        # Mantém preço e disponibilidade estáveis até o fim da transação.
+        cursor.execute(
+            """SELECT id_produto, preco, disponivel FROM produto
+            WHERE id_produto = ANY(%s) ORDER BY id_produto FOR SHARE""", (ids,)
+        )
+        return cursor.fetchall()
+
+
 def criar_produto(produto: dict):
     conn = get_connection()
     try:
