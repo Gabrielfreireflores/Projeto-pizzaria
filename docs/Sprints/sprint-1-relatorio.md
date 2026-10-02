@@ -13,8 +13,8 @@ Trilha: B (Cliente real nº 1)
 | História (E2) | Planejada para esta sprint? | Entregue? | Observação |
 |---|---|---|---|
 | #1 Login/autenticação | Sim (Sprint 1) | Parcial | Apenas UI (`login/page.tsx`), sem bloqueio de tentativas inválidas, sem redirecionamento por perfil, sem integração com backend. PR #8 (merge `cbda1ed`) |
-| #2 Cadastro de categorias | Sim (Sprint 1) | Não | Não há tela ou lógica de administração de categorias atribuível a este integrante |
-| #3 Cadastro de produtos (categoria/ingredientes) | Sim (Sprint 1) | Backend entregue; integração com interface pendente | Cadastro com validações, categoria, ingredientes, autorização e transação — Marcelo, PR #6. Produtos exibidos no Menu são dados mock (`lib/data/products.ts`), não cadastrados via interface administrativa |
+| #2 Cadastro de categorias | Sim (Sprint 1) | Sim | Há tela ou lógica de administração de categorias atribuível a este integrante |
+| #3 Cadastro de produtos (categoria/ingredientes) | Sim (Sprint 1) | Não | Produtos exibidos no Menu são dados mock (`lib/data/products.ts`), não cadastrados via interface administrativa |
 | #4 Menu (exibição de produtos ao cliente) | Sim (Sprint 2) | Sim | Dados mock separados da UI. PR #7 (merge `ca5b353`) |
 | #5 Carrinho de compras | Sim (Sprint 2) | Sim | Adicionar/remover produto, ajustar quantidade, subtotal/total, persistência via `localStorage`. PR #7 (merge `ca5b353`) |
 | #6 Checkout | Sim (Sprint 2) | Sim | Formulário de entrega e pagamento, validação client-side, tela de confirmação "Recebido". Sem integração com backend/API. PR #7 (merge `ca5b353`) Backend de criação de pedidos entregue por Marcelo na PR #13, com validação, recálculo de valores, transação e status inicial RECEBIDO; integração com a interface ainda pendente. |
