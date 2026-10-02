@@ -1,4 +1,5 @@
 # Evidências de Teste — Sprint 1 e Sprint 2
+Equipe: Gabriel Freire Flôres (RA 2840482423010) — Marcelo Augusto Oliveira Jose (RA 2840482423043) — Christian de Lima (RA 2840482523031) — Guilherme Fabiano da Silva Gomes (RA 2840482423037) Trilha: B (Cliente real nº 1)
 
 > Documentado em conjunto devido à unificação dos prazos de entrega das duas Sprints.
 
@@ -18,8 +19,7 @@
 
 ## Observações gerais
 
-- Nenhum teste automatizado, de integração, de banco de dados ou de cobertura de código foi realizado ou está registrado nestas Sprints.
-- Não há pipeline de CI/CD em execução comprovada nestas etapas.
-- Todos os testes acima foram manuais, executados em ambiente local pelo integrante, sem registro formal (print/log) além do relato nesta documentação, exceto onde indicado.
-- O teste de build pós-merge da PR #10 cobre apenas a compilação do projeto, não a validação funcional das telas de área de funcionário (conteúdo de outro integrante).
-- Os casos de teste planejados no `plano_de_teste.md` (CT01 a CT06), caso existentes, não foram cruzados formalmente com esta tabela. [INFORMAÇÃO NECESSÁRIA] para essa correspondência.
+- 
+- 
+- 
+-
