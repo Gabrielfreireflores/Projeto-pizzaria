@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Fraunces, Public_Sans } from "next/font/google";
 import "./globals.css";
+import { CartProvider } from "@/hooks/use-cart";
 
 const fraunces = Fraunces({
   subsets: ["latin"],
@@ -27,7 +28,9 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="pt-BR" className={`${fraunces.variable} ${publicSans.variable}`}>
-      <body>{children}</body>
+      <body>
+        <CartProvider>{children}</CartProvider>
+      </body>
     </html>
   );
 }

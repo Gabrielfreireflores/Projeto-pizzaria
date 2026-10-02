@@ -66,9 +66,13 @@ Os comandos abaixo utilizam o CMD do Windows. As ferramentas devem estar dispon�
 
 5. O seed já está incluído em `db/schema.sql`.
 
-6. A inicialização da aplicação ainda não está disponível: o backend não foi implementado e a interface está em prototipação no Figma. Nesta versão, é possível preparar o banco e instalar as dependências.
+6. Para inicializar a aplicação backend com os endpoints execute:
+   ``` python run.py ```
+   OBS: Endpoints ainda sendo desenvolvidos.
+   
+   FrontEnd em desenvolvimento.
 
-7. Ainda não há URL local da aplicação. O protótipo em desenvolvimento pode ser acessado em [Figma — Pizzaria do Barriga](https://www.figma.com/design/hd8egMUs65MPhKonVAZqMm/Pizzaria-do-Barriga).
+8. Ainda não há URL local da aplicação. O protótipo em desenvolvimento pode ser acessado em [Figma — Pizzaria do Barriga](https://www.figma.com/design/hd8egMUs65MPhKonVAZqMm/Pizzaria-do-Barriga).
 
 ## Estrutura do repositório
 
