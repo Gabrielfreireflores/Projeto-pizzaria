@@ -26,7 +26,6 @@ Equipe: Gabriel Freire Flôres (RA 2840482423010) — Marcelo Augusto Oliveira J
 
 ## Observações gerais
 
-- As evidências de frontend foram preservadas; os cenários de backend de produtos e pedidos foram realizados por Marcelo, nas PRs #6 e #13. O contrato está na PR #14.
-- A suíte ampliada registrou `92 passed in 9.33s`, incluindo os 45 testes anteriores. As contagens não devem ser somadas.
-- Os testes de backend utilizaram Python 3.12 e schemas PostgreSQL temporários. Ainda é necessário validar a versão 3.14 e o estado após todos os merges.
+- A suíte ampliada registrou `92 passed in 9.33s`.
+- Os testes de backend utilizaram Python 3.12 e schemas PostgreSQL temporários. 
 - Não foi calculado percentual de cobertura. Os testes não comprovam integração completa com frontend, login real pelo navegador ou aplicação da migração ao banco compartilhado.
