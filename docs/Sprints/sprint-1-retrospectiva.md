@@ -18,12 +18,17 @@ Equipe: Gabriel Freire Flôres (RA 2840482423010) — Marcelo Augusto Oliveira J
 - O vídeo do Hero foi otimizado, reduzindo seu tamanho de aproximadamente 21 MB para 600 KB antes de ser incorporado ao produto, evitando impacto negativo de performance.
 - A reconciliação da PR #10, relacionada ao trabalho de outro integrante e à reintrodução da área de funcionário, foi concluída com sucesso, preservando o conteúdo original da branch e validando o build antes da mesclagem à `main`.
 
+- No backend de produtos e pedidos, o alinhamento em camadas e os ajustes de revisão facilitaram manter o padrão da equipe.
+- Os testes evoluíram de 45 para 92 cenários, incluindo PostgreSQL e rollback. Transações e recálculo de valores no servidor ajudaram a garantir a consistência dos pedidos.
+- O contrato de Produto foi documentado com exemplos para apoiar a integração com o frontend.
+
 ## 3. O que não funcionou
 
-- Houve descompasso entre o planejamento do Backlog para a Sprint 1 (histórias #1, #2 e #3, relacionadas a login, categorias e produtos) e o que foi efetivamente entregue. Foram concluídas a estrutura, a home e as interfaces de login/cadastro, enquanto categorias e produtos administráveis não foram concluídos nessa Sprint.
+- No frontend, houve descompasso entre o planejamento do Backlog para a Sprint 1 (histórias #1, #2 e #3, relacionadas a login, categorias e produtos) e o que foi efetivamente entregue. Foram concluídas a estrutura, a home e as interfaces de login/cadastro, enquanto categorias e produtos administráveis não foram concluídos nessa Sprint.
 - A `main` do repositório ficou temporariamente desatualizada em relação à branch de trabalho, exigindo um processo manual de fetch/merge para sincronização.
 - Durante a reconciliação da PR #10, houve risco de perda acidental de código funcional, envolvendo os hooks `use-funcionarios.tsx` e `use-produtos.tsx`. O Git marcou os arquivos para deleção sem apresentar um conflito explícito, exigindo verificação manual antes do commit.
-- 
+- No desenvolvimento do backend, foi necessário sincronizar a estrutura de pastas, ajustar o carregamento do `.env` e a conexão PostgreSQL, além de adequar os testes à assinatura de `create_app` usada pelo colega.
+- A integração completa entre telas e endpoints de produtos/pedidos ainda precisa de validação conjunta.
 
 ## 4. Ações para a próxima sprint
 
@@ -33,3 +38,6 @@ Equipe: Gabriel Freire Flôres (RA 2840482423010) — Marcelo Augusto Oliveira J
 | Verificar manualmente arquivos modificados ou removidos durante merges antes de realizar o commit. | Equipe |
 | Manter a `main` sincronizada com as branches de desenvolvimento para reduzir conflitos e necessidade de sincronizações manuais. | Equipe |
 | Priorizar a conclusão das funcionalidades que ficaram pendentes do planejamento da Sprint 1. | Equipe |
+| Validar login/sessão e integrar os endpoints de produtos e pedidos às telas (proposta a alinhar). | Marcelo e responsáveis pela autenticação/frontend (sugerido) |
+| Aplicar a migração de pedidos no banco compartilhado e executar a suíte após os merges, na versão Python prevista (proposta a alinhar). | Responsáveis pelo backend/banco (sugerido) |
+| Manter o contrato atualizado junto das alterações nos endpoints (proposta a alinhar). | Responsáveis pelos endpoints (sugerido) |
