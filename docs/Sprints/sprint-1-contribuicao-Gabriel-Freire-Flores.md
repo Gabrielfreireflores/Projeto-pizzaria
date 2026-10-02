@@ -7,7 +7,7 @@
 - **Nome:** Gabriel Freire Flôres
 - **RA:** 2840482423010
 - **Papel na Sprint 1 (conforme Termo de Aceite):** Product Owner
-- **Papel na Sprint 2:** [INFORMAÇÃO NECESSÁRIA]
+- **Papel na Sprint 2: Criação do design, marca e Front do cliente.
 
 ## Atividades realizadas
 
@@ -50,7 +50,8 @@
 
 ## Participação na Sprint
 
-Participação comprovada na implementação técnica do frontend em ambas as Sprints, incluindo atividade de integração/reconciliação de código de outro integrante (PR #10), conforme evidências abaixo. [INFORMAÇÃO NECESSÁRIA] quanto à participação em reuniões, decisões de planejamento ou outras atividades não técnicas.
+Participação comprovada na implementação técnica do frontend em ambas as Sprints, incluindo atividade de integração/reconciliação de código de outro integrante (PR #10), conforme evidências abaixo. <img width="946" height="1020" alt="Captura de tela 2026-09-27 162322" src="https://github.com/user-attachments/assets/abf3c714-7219-4b9d-afd4-4627928fdab3" /> 
+ quanto à participação em reuniões, decisões de planejamento ou outras atividades não técnicas.
 
 ## Commits relacionados
 
@@ -65,13 +66,14 @@ Participação comprovada na implementação técnica do frontend em ambas as Sp
 - PR #4 — merge `96e4bba` — estrutura base e home (Sprint 1).
 - PR #7 — merge `ca5b353` — Menu, Carrinho e Checkout (Sprint 2).
 - PR #8 — merge `cbda1ed` — Login, Cadastro, Sobre, Footer, ajuste mobile do carrinho (Sprint 1).
-- PR referente ao vídeo no Hero — commit `b4902bd` (número da PR: [INFORMAÇÃO NECESSÁRIA]).
+- PR #9 referente ao vídeo no Hero — commit `b4902bd` Alterações na página do cliente, inclusão de vídeo, alteração de textos padrões e mais informações da pizzaria, com redirecionamento para instagram, contatos, ainda falta adicionar imagens das pizzas e completar o cardápio.
 - PR #10 — branch `feature/equipe-e-autenticacao` (conteúdo de autoria de Christian de Lima), reconciliada com a `main` e mesclada por este integrante, com resolução de conflitos e validação de build.
 
 ## Evidências das atividades
 
 - Histórico de atividade do repositório mostrando os commits e merges listados acima.
-- Execução local do frontend (`npm run build`) e validação visual da renderização de cada entrega — evidência baseada em relato próprio; [INFORMAÇÃO NECESSÁRIA] para print/log adicional, caso exigido pelo modelo.
+- Execução local do frontend (`npm run build`) e validação visual da renderização de cada entrega — evidência baseada em relato próprio;<img width="1617" height="951" alt="image" src="https://github.com/user-attachments/assets/f8c9e9d7-3680-4dde-82c4-89c03886f177" />
+ para print/log adicional.
 - Build aprovado após a mesclagem da PR #10, incluindo execução de `npm audit fix --force` — evidência baseada em relato próprio.
 - Arquivo `frontend.zip` fornecido, contendo o estado final do código-fonte do frontend correspondente às entregas descritas.
 
