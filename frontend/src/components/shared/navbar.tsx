@@ -6,10 +6,10 @@ import { Menu, X, ShoppingBag, User } from "lucide-react";
 import { useCart } from "@/hooks/use-cart";
 
 const NAV_LINKS = [
-  { href: "#cardapio", label: "Cardápio" },
-  { href: "#bebidas", label: "Bebidas" },
-  { href: "#sobre", label: "Sobre" },
-  { href: "#contato", label: "Contato" },
+  { href: "/#cardapio", label: "Cardápio" },
+  { href: "/#bebidas", label: "Bebidas" },
+  { href: "/#sobre", label: "Sobre" },
+  { href: "/#contato", label: "Contato" },
 ];
 
 export function Navbar() {
