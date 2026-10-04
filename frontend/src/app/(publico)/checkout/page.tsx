@@ -3,7 +3,14 @@
 import { useMemo, useState, type FormEvent } from "react";
 import { useCart } from "@/hooks/use-cart";
 import { Navbar } from "@/components/shared/navbar";
-import { CheckoutFormData, CheckoutFormErrors, PaymentMethod } from "@/types/order";
+import {
+  CheckoutFormData,
+  CheckoutFormErrors,
+  FulfillmentMethod,
+  Order,
+  PaymentMethod,
+} from "@/types/order";
+import { createOrder } from "@/services/orders";
 
 const currencyFormatter = new Intl.NumberFormat("pt-BR", {
   style: "currency",
@@ -13,14 +20,10 @@ const currencyFormatter = new Intl.NumberFormat("pt-BR", {
 const INITIAL_FORM: CheckoutFormData = {
   name: "",
   phone: "",
-  cep: "",
   address: "",
-  number: "",
-  complement: "",
   neighborhood: "",
-  city: "",
-  state: "",
   paymentMethod: "pix",
+  fulfillment: "entrega",
 };
 
 const PAYMENT_OPTIONS: { value: PaymentMethod; label: string }[] = [
@@ -29,49 +32,37 @@ const PAYMENT_OPTIONS: { value: PaymentMethod; label: string }[] = [
   { value: "dinheiro", label: "Dinheiro" },
 ];
 
+const FULFILLMENT_OPTIONS: { value: FulfillmentMethod; label: string }[] = [
+  { value: "entrega", label: "Entrega" },
+  { value: "retirada", label: "Retirada" },
+];
+
 function validate(form: CheckoutFormData): CheckoutFormErrors {
   const errors: CheckoutFormErrors = {};
 
   if (form.name.trim().length < 3) {
-    errors.name = "Informe seu nome completo.";
+    errors.name = "Informe seu nome.";
   }
   if (form.phone.replace(/\D/g, "").length < 10) {
     errors.phone = "Informe um telefone válido com DDD.";
   }
-  if (form.cep.replace(/\D/g, "").length !== 8) {
-    errors.cep = "CEP deve ter 8 dígitos.";
-  }
-  if (!form.address.trim()) {
-    errors.address = "Informe o endereço.";
-  }
-  if (!form.number.trim()) {
-    errors.number = "Informe o número.";
-  }
-  if (!form.neighborhood.trim()) {
-    errors.neighborhood = "Informe o bairro.";
-  }
-  if (!form.city.trim()) {
-    errors.city = "Informe a cidade.";
-  }
-  if (form.state.trim().length !== 2) {
-    errors.state = "Use a sigla do estado (ex: SP).";
+  if (form.fulfillment === "entrega") {
+    if (form.address.trim().length < 5) {
+      errors.address = "Informe a rua e o número.";
+    }
+    if (!form.neighborhood.trim()) {
+      errors.neighborhood = "Informe o bairro.";
+    }
   }
 
   return errors;
-}
-
-interface OrderSnapshot {
-  orderNumber: string;
-  form: CheckoutFormData;
-  items: { name: string; quantity: number; price: number }[];
-  total: number;
 }
 
 export default function CheckoutPage() {
   const { items, subtotal, clearCart } = useCart();
   const [form, setForm] = useState<CheckoutFormData>(INITIAL_FORM);
   const [errors, setErrors] = useState<CheckoutFormErrors>({});
-  const [order, setOrder] = useState<OrderSnapshot | null>(null);
+  const [order, setOrder] = useState<Order | null>(null);
 
   const isCartEmpty = items.length === 0;
 
@@ -84,23 +75,32 @@ export default function CheckoutPage() {
     setForm((prev) => ({ ...prev, [field]: value }));
   }
 
-  function handleSubmit(event: FormEvent) {
+  async function handleSubmit(event: FormEvent) {
     event.preventDefault();
     const validationErrors = validate(form);
     setErrors(validationErrors);
     if (Object.keys(validationErrors).length > 0) return;
 
-    const orderNumber = `#${Date.now().toString().slice(-6)}`;
-    setOrder({
-      orderNumber,
-      form,
+    const created = await createOrder({
+      customer: { name: form.name.trim(), phone: form.phone },
+      fulfillment: form.fulfillment,
+      delivery:
+        form.fulfillment === "entrega"
+          ? { address: form.address.trim(), neighborhood: form.neighborhood.trim() }
+          : undefined,
+      paymentMethod: form.paymentMethod,
       items: items.map(({ product, quantity }) => ({
+        menuItemId: product.menuItemId ?? product.id,
+        size: product.size,
+        halfMenuItemId: product.halfMenuItemId,
+        note: product.note,
         name: product.name,
         quantity,
-        price: product.price,
+        unitPrice: product.price,
       })),
       total,
     });
+    setOrder(created);
     clearCart();
   }
 
@@ -114,20 +114,25 @@ export default function CheckoutPage() {
               Recebido
             </span>
             <h1 className="mt-4 text-2xl font-semibold text-char">
-              Pedido {order.orderNumber} confirmado!
+              Pedido {order.number} confirmado!
             </h1>
             <p className="mt-2 text-sm text-muted-foreground">
-              Obrigado, {order.form.name.split(" ")[0]}. Seu pedido foi
+              Obrigado, {order.customer.name.split(" ")[0]}. Seu pedido foi
               recebido e já vamos preparar.
             </p>
 
             <div className="mt-6 space-y-2 rounded-md bg-muted p-4 text-left text-sm">
-              {order.items.map((item) => (
-                <div key={item.name} className="flex justify-between">
+              {order.items.map((item, index) => (
+                <div key={`${item.menuItemId}-${index}`} className="flex justify-between">
                   <span>
                     {item.quantity}x {item.name}
+                    {item.note && (
+                      <span className="block text-xs text-muted-foreground">
+                        Obs.: {item.note}
+                      </span>
+                    )}
                   </span>
-                  <span>{currencyFormatter.format(item.price * item.quantity)}</span>
+                  <span>{currencyFormatter.format(item.unitPrice * item.quantity)}</span>
                 </div>
               ))}
               <div className="mt-2 flex justify-between border-t border-border pt-2 font-semibold text-char">
@@ -138,14 +143,19 @@ export default function CheckoutPage() {
 
             <div className="mt-6 text-left text-sm text-muted-foreground">
               <p>
-                Entrega: {order.form.address}, {order.form.number}
-                {order.form.complement && ` - ${order.form.complement}`}
-                <br />
-                {order.form.neighborhood} · {order.form.city}/{order.form.state}
+                {order.delivery ? (
+                  <>
+                    Entrega: {order.delivery.address}
+                    <br />
+                    Bairro: {order.delivery.neighborhood}
+                  </>
+                ) : (
+                  "Retirada no local"
+                )}
               </p>
               <p className="mt-1">
                 Pagamento:{" "}
-                {PAYMENT_OPTIONS.find((p) => p.value === order.form.paymentMethod)?.label}
+                {PAYMENT_OPTIONS.find((p) => p.value === order.paymentMethod)?.label}
               </p>
             </div>
 
@@ -202,65 +212,52 @@ export default function CheckoutPage() {
               />
             </Field>
 
-            <div className="grid grid-cols-2 gap-4">
-              <Field label="CEP" error={errors.cep}>
-                <input
-                  value={form.cep}
-                  onChange={(e) => updateField("cep", e.target.value)}
-                  placeholder="14680-000"
-                  className={inputClass(!!errors.cep)}
-                />
-              </Field>
-              <Field label="Número" error={errors.number}>
-                <input
-                  value={form.number}
-                  onChange={(e) => updateField("number", e.target.value)}
-                  className={inputClass(!!errors.number)}
-                />
-              </Field>
-            </div>
+            <fieldset>
+              <legend className="text-sm font-medium text-char">
+                Como você quer receber?
+              </legend>
+              <div className="mt-2 grid grid-cols-2 gap-2">
+                {FULFILLMENT_OPTIONS.map((option) => {
+                  const selected = form.fulfillment === option.value;
+                  return (
+                    <button
+                      key={option.value}
+                      type="button"
+                      aria-pressed={selected}
+                      onClick={() => updateField("fulfillment", option.value)}
+                      className={`rounded-sm border px-3 py-2 text-sm font-medium transition-colors ${
+                        selected
+                          ? "border-brick bg-brick/10 text-brick"
+                          : "border-border text-char hover:border-brick/50"
+                      }`}
+                    >
+                      {option.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </fieldset>
 
-            <Field label="Endereço" error={errors.address}>
-              <input
-                value={form.address}
-                onChange={(e) => updateField("address", e.target.value)}
-                className={inputClass(!!errors.address)}
-              />
-            </Field>
+            {form.fulfillment === "entrega" && (
+              <>
+                <Field label="Rua e número" error={errors.address}>
+                  <input
+                    value={form.address}
+                    onChange={(e) => updateField("address", e.target.value)}
+                    placeholder="Ex.: Rua das Flores, 123"
+                    className={inputClass(!!errors.address)}
+                  />
+                </Field>
 
-            <Field label="Complemento (opcional)">
-              <input
-                value={form.complement}
-                onChange={(e) => updateField("complement", e.target.value)}
-                className={inputClass(false)}
-              />
-            </Field>
-
-            <div className="grid grid-cols-3 gap-4">
-              <Field label="Bairro" error={errors.neighborhood} className="col-span-2">
-                <input
-                  value={form.neighborhood}
-                  onChange={(e) => updateField("neighborhood", e.target.value)}
-                  className={inputClass(!!errors.neighborhood)}
-                />
-              </Field>
-              <Field label="UF" error={errors.state}>
-                <input
-                  value={form.state}
-                  maxLength={2}
-                  onChange={(e) => updateField("state", e.target.value.toUpperCase())}
-                  className={inputClass(!!errors.state)}
-                />
-              </Field>
-            </div>
-
-            <Field label="Cidade" error={errors.city}>
-              <input
-                value={form.city}
-                onChange={(e) => updateField("city", e.target.value)}
-                className={inputClass(!!errors.city)}
-              />
-            </Field>
+                <Field label="Bairro" error={errors.neighborhood}>
+                  <input
+                    value={form.neighborhood}
+                    onChange={(e) => updateField("neighborhood", e.target.value)}
+                    className={inputClass(!!errors.neighborhood)}
+                  />
+                </Field>
+              </>
+            )}
 
             <fieldset>
               <legend className="text-sm font-medium text-char">Forma de pagamento</legend>
@@ -297,6 +294,11 @@ export default function CheckoutPage() {
                 <li key={product.id} className="flex justify-between">
                   <span>
                     {quantity}x {product.name}
+                    {product.note && (
+                      <span className="block text-xs text-muted-foreground">
+                        Obs.: {product.note}
+                      </span>
+                    )}
                   </span>
                   <span>{currencyFormatter.format(product.price * quantity)}</span>
                 </li>
@@ -306,6 +308,11 @@ export default function CheckoutPage() {
               <span>Total</span>
               <span>{currencyFormatter.format(total)}</span>
             </div>
+            {form.fulfillment === "entrega" && (
+              <p className="mt-2 text-xs text-muted-foreground">
+                Taxa de entrega a consultar.
+              </p>
+            )}
           </div>
         </div>
       </div>
