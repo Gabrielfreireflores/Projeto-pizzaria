@@ -1,4 +1,5 @@
 from app.database import get_connection
+from app.exceptions.custom_exceptions import ChaveUnicaVioladaError, ErroBancoDadosError
 
 def criar_categoria(nome: str):
     conn = get_connection()
@@ -10,9 +11,13 @@ def criar_categoria(nome: str):
             categoria = cursor.fetchone()
             conn.commit()
             return categoria
-    except Exception:
-        conn.rollback()
-        raise
+
+    except psycopg.errors.UniqueViolation as e:
+        raise ChaveUnicaVioladaError("Erro: Nome da categoria já cadastrado no banco de dados.") from e
+    
+    except psycopg.DatabaseError as e:
+        raise ErroBancoDadosError("Erro interno ao acessar o banco de dados.") from e
+
     finally:
         conn.close()
 
@@ -25,6 +30,10 @@ def buscar_categoria_por_id(id_categoria: int):
             )
             resultado = cursor.fetchone()
             return resultado
+
+    except psycopg.DatabaseError as e:
+        raise ErroBancoDadosError("Erro interno ao acessar o banco de dados.") from e
+
     finally:
         conn.close()
 
@@ -37,9 +46,8 @@ def buscar_categoria_por_nome(nome: str):
             )
             resultado = cursor.fetchone()
             return resultado
-    except Exception:
-        conn.rollback()
-        raise
+    except psycopg.DatabaseError as e:
+        raise ErroBancoDadosError("Erro interno ao acessar o banco de dados.") from e
     finally:
         conn.close()
 
@@ -52,9 +60,10 @@ def remover_categoria(nome: str):
             )
             conn.commit()
             return 1
-    except Exception:
-        conn.rollback()
-        raise
+    
+    except psycopg.DatabaseError as e:
+        raise ErroBancoDadosError("Erro interno ao acessar o banco de dados.") from e
+        if conn: conn.rollback()
     finally:
         conn.close()
 
@@ -67,5 +76,7 @@ def listar_categorias():
             )
             resultado = cursor.fetchall()
             return resultado
+    except psycopg.DatabaseError as e:
+        raise ErroBancoDadosError("Erro interno ao acessar o banco de dados.") from e
     finally:
         conn.close()

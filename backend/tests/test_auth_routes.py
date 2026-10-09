@@ -31,7 +31,7 @@ def test_rota_cadastrar_funcionario_sucesso(client):
             "email": "funcionario@pizzaria.com",
             "senha": "senhaSegura123"
         }
-        resposta = client.post('/auth/cadastro/funcionario', json=payload)
+        resposta = client.post('/auth/api/cadastro/funcionario', json=payload)
         
         # 3. VERIFICAÇÕES (ASSERTIONS)
         # 3.1. Código HTTP deve ser 201 (Created)
@@ -59,7 +59,7 @@ def test_rota_cadastrar_funcionario_sem_email_deve_falhar(client):
         # Sem campo e-mail
     }
     
-    resposta = client.post('/auth/cadastro/funcionario', json=payload)
+    resposta = client.post('/auth/api/cadastro/funcionario', json=payload)
     
     assert resposta.status_code == 400
     dados = resposta.get_json()
@@ -79,7 +79,7 @@ def test_rota_cadastrar_cliente_sucesso(client):
             "email": "cliente@email.com",
             "senha": "123"
         }
-        resposta = client.post('/auth/cadastro/cliente', json=payload)
+        resposta = client.post('/auth/api/cadastro/cliente', json=payload)
         
         assert resposta.status_code == 201
         
@@ -101,7 +101,7 @@ def test_rota_cadastrar_cliente_email_duplicado_deve_falhar(client):
             "email": "duplicado@email.com",
             "senha": "123"
         }
-        resposta = client.post('/auth/cadastro/cliente', json=payload)
+        resposta = client.post('/auth/api/cadastro/cliente', json=payload)
         
         # O Controller deve capturar o ValueError e responder status HTTP 400
         assert resposta.status_code == 400

@@ -22,6 +22,10 @@ def criar_pedido_controller():
         return jsonify({'erro': str(e)}), 403
     except ValueError as e:
         return jsonify({'erro': str(e)}), 400
-    except (psycopg.Error, RuntimeError):
-        current_app.logger.error('Falha de persistência/configuração ao criar pedido.')
-        return jsonify({'erro': 'Não foi possível criar o pedido.'}), 503
+    except (psycopg.Error, RuntimeError) as e:
+        current_app.logger.exception(
+            'Falha de persistência/configuração ao criar pedido.'
+        )
+        return jsonify({
+            'erro': str(e)
+        }), 503
