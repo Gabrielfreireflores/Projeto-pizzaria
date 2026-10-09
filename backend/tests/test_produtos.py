@@ -154,7 +154,12 @@ def test_categorias_e_produtos_na_mesma_aplicacao(monkeypatch):
     app = create_app()
     app.config.update(TESTING=True, SECRET_KEY='teste')
     client = app.test_client()
-    assert client.get('/categorias').json == [[1, 'Pizzas']]
+    resposta = client.get('/api/categorias')
+
+    assert resposta.status_code == 200
+    assert resposta.json == {
+        "categorias": [[1, "Pizzas"]]
+    }
     assert client.post('/produtos', json={}).status_code == 401
     assert client.post('/api/produtos', json={}).status_code == 401
 

@@ -36,14 +36,13 @@ def usuario_logado_controller():
         }
     }), 200
 
-
 def cadastrar_usuario_controller(perfil_padrao: str):
     data = request.get_json() or {}
 
-    email = data.get('email', '')
-    senha = data.get('senha', '')
+    email = data.get("email", "")
+    senha = data.get("senha", "")
     descricao = data.get(
-        'descricao',
+        "descricao",
         f"Cadastro do perfil {perfil_padrao}"
     )
 
