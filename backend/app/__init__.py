@@ -5,6 +5,7 @@ from app.routes.categoria_routes import categoria_bp
 from app.routes.auth_routes import auth_bp
 from app.routes.produto_routes import produto_bp
 from app.routes.pedido_routes import pedido_bp
+from app.routes.cardapio_routes import cardapio_bp
 from app.exceptions.custom_exceptions import AppBaseException
 
 def create_app():
@@ -19,6 +20,7 @@ def create_app():
     app.register_blueprint(categoria_bp)
     app.register_blueprint(auth_bp)
     app.register_blueprint(produto_bp)
+    app.register_blueprint(cardapio_bp)
     app.register_blueprint(pedido_bp)   
 
     return app
