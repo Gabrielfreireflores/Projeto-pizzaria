@@ -1,35 +1,18 @@
-import psycopg
-from flask import Blueprint, request, jsonify, session, current_app
-from werkzeug.exceptions import BadRequest, UnsupportedMediaType
-
-from app.services import produto_services
+from flask import Blueprint
+from app.controllers import produto_controller
 
 produto_bp = Blueprint('produto_bp', __name__)
 
 
 @produto_bp.route('/produtos', methods=['POST'])
 @produto_bp.route('/api/produtos', methods=['POST'])
+@produto_bp.route('/api/v1/produtos', methods=['POST'])
 def criar_produto():
-    id_usuario = session.get('id_usuario')
-    if type(id_usuario) is not int or id_usuario <= 0:
-        return jsonify({'erro': 'Autenticação necessária.'}), 401
+    return produto_controller.criar_produto_controller()
 
-    try:
-        data = request.get_json()
-    except (BadRequest, UnsupportedMediaType):
-        return jsonify({'erro': 'Envie um objeto JSON válido.'}), 400
-    if not isinstance(data, dict):
-        return jsonify({'erro': 'Envie um objeto JSON.'}), 400
 
-    try:
-        produto = produto_services.criar_produto(data, id_usuario)
-        return jsonify(produto), 201
-    except PermissionError as e:
-        return jsonify({'erro': str(e)}), 403
-    except produto_services.ProdutoDuplicado as e:
-        return jsonify({'erro': str(e)}), 409
-    except ValueError as e:
-        return jsonify({'erro': str(e)}), 400
-    except (psycopg.Error, RuntimeError):
-        current_app.logger.error('Falha de banco ao cadastrar produto.')
-        return jsonify({'erro': 'Não foi possível cadastrar o produto.'}), 503
+@produto_bp.route('/produtos', methods=['GET'])
+@produto_bp.route('/api/produtos', methods=['GET'])
+@produto_bp.route('/api/v1/produtos', methods=['GET'])
+def listar_produtos():
+    return produto_controller.listar_produtos_controller()
