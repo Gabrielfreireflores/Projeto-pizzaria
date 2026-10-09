@@ -21,11 +21,9 @@ def create_app():
     app.register_blueprint(categoria_bp)
     app.register_blueprint(auth_bp)
     app.register_blueprint(produto_bp)
-    app.register_blueprint(auth_bp)
     app.register_blueprint(cardapio_bp)
     app.register_blueprint(pedido_bp)   
 
-    return app
     @app.errorhandler(AppBaseException)
     def handle_app_base_exception(error):
         """
