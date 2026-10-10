@@ -2,6 +2,8 @@
 
 **Trilha:** B (Cliente real nº 1)
 
+Equipe: Gabriel Freire Flôres (RA 2840482423010) — Marcelo Augusto Oliveira Jose (RA 2840482423043) — Christian de Lima (RA 2840482523031) — Guilherme Fabiano da Silva Gomes (RA 2840482423037)
+
 > Registro parcial dos aprendizados da sprint, a complementar pela equipe. As propostas abaixo ainda precisam ser alinhadas pela equipe; não representam decisões de reunião já formalizadas.
 
 ## 1. Ações da retrospectiva anterior — foram aplicadas?
@@ -55,5 +57,3 @@
 | Obter com a pizzaria as fotos dos sabores do cardápio | Gabriel (a alinhar) |
 | Implementar login com perfil e proteção de rota no frontend, simulados até a autenticação do backend | Gabriel (a alinhar) |
 | Sincronizar a branch do frontend com a `main` e concluir a PR | Gabriel (a alinhar) |
-| Corrigir os apontamentos da E4 (plano de testes, convenções do README e roteiro do protótipo) | Equipe (a alinhar); plano no relatório individual de Gabriel |
-| Tratar o lint do frontend (`next lint` removido no Next 16) e as vulnerabilidades do `npm audit` em PR separada | Gabriel (a alinhar) |
