@@ -2,13 +2,11 @@
 
 **Trilha:** B (Cliente real nº 1)
 
-> Os trechos marcados com **[INFORMAÇÃO NECESSÁRIA]** e os espaços **[INSERIR PRINT]** devem ser completados antes da entrega.
-
 ## Identificação do integrante
 
 - **Nome:** Gabriel Freire Flôres
 - **RA:** 2840482423010
-- **Papel na Sprint 3:** Frontend do cliente (cardápio, carrinho, checkout e pedido). **[INFORMAÇÃO NECESSÁRIA]** quanto ao papel formal registrado no Termo de Aceite da Sprint 3.
+- **Papel na Sprint 3:** Frontend do cliente (cardápio, carrinho, checkout e pedido).
 - **Papéis anteriores:** Product Owner (Sprint 1); design, marca e front do cliente (Sprint 2).
 
 ## Atividades realizadas
@@ -58,7 +56,7 @@
 
 ## Participação na Sprint
 
-Participação comprovada na implementação técnica do frontend do cliente, conforme as evidências abaixo. **[INFORMAÇÃO NECESSÁRIA]** quanto à participação em reuniões, decisões de planejamento ou outras atividades não técnicas.
+Participação comprovada na implementação técnica do frontend do cliente, em contato e conversas com os demais integrantes da equipe.
 
 ## Commits relacionados
 
@@ -74,13 +72,17 @@ Branch `feat/cardapio-v2-pedido`:
 
 ## Evidências das atividades
 
-**[INSERIR PRINT 1]** — Cardápio v2 no navegador (de preferência na versão celular), mostrando as categorias, o seletor de tamanho P/G e o botão Meio a meio.
+<img width="1908" height="916" alt="image" src="https://github.com/user-attachments/assets/888260d6-1076-44b9-a6c0-d38518e47685" /> — Cardápio v2 no navegador (de preferência na versão celular), mostrando as categorias, o seletor de tamanho P/G e o botão Meio a meio.
 
-**[INSERIR PRINT 2]** — Sacola e checkout: item com observação, opção Entrega/Retirada e a tela de confirmação com o número do pedido.
+<img width="1199" height="597" alt="image" src="https://github.com/user-attachments/assets/8cf32123-e657-469d-a97a-d91a7bf77e94" />
+<img width="297" height="542" alt="image" src="https://github.com/user-attachments/assets/5f089993-a990-48e3-8231-a203a176c938" />
+<img width="1390" height="770" alt="Captura de tela 2026-10-09 230238" src="https://github.com/user-attachments/assets/a237ba71-33cf-4400-9380-cba47b2ec604" />
+<img width="1225" height="646" alt="image" src="https://github.com/user-attachments/assets/72c3acbd-31db-4fd4-95f8-de718828f240" />
+— Sacola e checkout: item com observação, opção Entrega/Retirada e a tela de confirmação com o número do pedido.
 
-**[INSERIR PRINT 3]** — DevTools (Application → Local Storage → `pizzaria-orders`) com um pedido de teste, mostrando `status`, `fulfillment`, `items` com `menuItemId`, `size` e `halfMenuItemId`.
+<img width="1171" height="865" alt="Captura de tela 2026-10-04 140632" src="https://github.com/user-attachments/assets/60d0269e-8434-476b-aa4e-8943afecde3c" /> — DevTools (Application → Local Storage → `pizzaria-orders`) com um pedido de teste, mostrando `status`, `fulfillment`, `items` com `menuItemId`, `size` e `halfMenuItemId`.
 
-**[INSERIR PRINT 3]** — Terminal com `npm run build` aprovado e `git log --oneline` mostrando os commits `d962689` e `f9e9faa`.
+<img width="1389" height="725" alt="Captura de tela 2026-10-09 224653" src="https://github.com/user-attachments/assets/12758bbb-a634-4d49-a45b-6abea6a00998" /> — Terminal com `npm run build` aprovado e `git log --oneline` mostrando os commits `d962689` e `f9e9faa`.
 
 ## Pendências e dependências
 
