@@ -93,20 +93,6 @@ Branch `feat/cardapio-v2-pedido`:
 - **Nomenclatura de status:** o frontend usa `recebido`, `em_preparo`, `pronto` e `entregue`; o backend registra "Recebido" e "Em preparação"; a fila do funcionário usa "Em produção", "Pronto" e "Entregue". É necessário alinhar um fluxo único.
 - **Qualidade:** o script `next lint` foi removido no Next 16 e há vulnerabilidades no `npm audit`; tratar em PR separada.
 
-## Plano de correção — apontamentos da correção E4
-
-| Apontamento do professor | O que será feito | Arquivo | Responsável | Prazo | Situação |
-|---|---|---|---|---|---|
-| Plano de testes sem título e sem identificação da equipe | Incluir título, nome da equipe (EquipeN12) e integrantes com RA | `docs/plano_de_teste.md` | Gabriel (a alinhar) | [a definir] | Planejado |
-| Tabela de estratégia sem linha de cabeçalho (`\|---\|`), não renderiza | Acrescentar a linha de cabeçalho e o separador da tabela | `docs/plano_de_teste.md` | Gabriel (a alinhar) | [a definir] | Planejado |
-| Sem casos de teste para a fila de pedidos e a transição de status (#7 e #8) | Incluir casos para a fila de pedidos, para a transição válida (Recebido → Em preparo → Pronto → Entregue) e para a transição inválida (por exemplo, Entregue → Recebido), que deve ser recusada. O fluxo e os nomes dos status serão alinhados com Marcelo e Christian antes da escrita | `docs/plano_de_teste.md` | Gabriel redige; Marcelo e Christian validam (a alinhar) | [a definir] | Planejado |
-| Sem caso para a consulta agregada (relatório) | Incluir caso(s) de teste da consulta agregada, conforme a história correspondente da E2. **[INFORMAÇÃO NECESSÁRIA]** quanto ao número da história | `docs/plano_de_teste.md` | Gabriel e Marcelo (a alinhar) | [a definir] | Planejado |
-| Convenções do README só descrevem a documentação | Acrescentar o padrão de branch e de commit para funcionalidades. Proposta: branches `feat/<escopo>`, `fix/<escopo>`, `docs/<escopo>` e `chore/<escopo>`; commits no formato `tipo(escopo): descrição` em português, como `feat(cliente): ...` e `chore(deps): ...`; PR para a `main` com build aprovado e sem arquivos `.env` | `README.md` | Gabriel (a alinhar com a equipe) | [a definir] | Planejado |
-| Placeholder do modelo (`[url do Figma/Penpot…]`) acima do link real e roteiro sem identificação | Remover o placeholder e acrescentar a identificação da equipe | `docs/Roteiro do Protótipo Navegável — Pizzaria do Barriga.md` | Gabriel (a alinhar) | [a definir] | Planejado |
-| Comandos do README só em CMD do Windows (observação na reprodutibilidade) | Acrescentar os equivalentes em PowerShell e em bash. Melhoria opcional | `README.md` | Gabriel (a alinhar) | [a definir] | Opcional |
-
-O professor destacou que a regra de negócio do projeto é o fluxo de status do pedido e que ela não aparece no plano de testes. Por isso, a prioridade é incluir os casos de status (#7 e #8) e alinhar a nomenclatura entre frontend, backend e área do funcionário.
-
 ## Observações
 
 - Nesta sprint não houve testes automatizados no frontend; a validação foi por build e por teste manual (relato próprio, com as evidências acima).
