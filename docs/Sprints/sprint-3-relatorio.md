@@ -5,6 +5,8 @@
 
 **Trilha:** B (Cliente real nº 1)
 
+Equipe: Gabriel Freire Flôres (RA 2840482423010) — Marcelo Augusto Oliveira Jose (RA 2840482423043) — Christian de Lima (RA 2840482523031) — Guilherme Fabiano da Silva Gomes (RA 2840482423037)
+
 > Registro parcial das entregas da Sprint 3, a complementar pela equipe. Situação das PRs consultada em 09/10/2026.
 
 ## 1. Planejado vs. entregue
@@ -78,5 +80,3 @@ Fluxo demonstrável no navegador, sem backend: cardápio v2 em categorias, com s
 - Frontend (Gabriel): somente 9 dos 45 itens do cardápio têm foto; as demais dependem da pizzaria.
 - Frontend (Gabriel): alinhar a nomenclatura de status do pedido entre frontend (`recebido`, `em_preparo`, `pronto`, `entregue`), backend ("Recebido", "Em preparação") e área do funcionário ("Em produção", "Pronto", "Entregue").
 - Frontend (Gabriel): verificar se o contrato de criação de pedido do backend comporta meio a meio, observação e retirada, e mapear os tamanhos P e G do cardápio do backend.
-- Frontend (Gabriel): sincronizar a branch com a `main`, concluir a PR do frontend e tratar em PR separada o script de lint (removido no Next 16) e as vulnerabilidades do `npm audit`.
-- Correção E4: ajustes no plano de testes, no README e no roteiro do protótipo, com plano no relatório individual de Gabriel.
