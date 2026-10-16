@@ -8,6 +8,8 @@ from app.routes.auth_routes import auth_bp
 from app.routes.pedido_routes import pedido_bp
 from app.routes.cardapio_routes import cardapio_bp
 from app.exceptions.custom_exceptions import AppBaseException
+from werkzeug.exceptions import HTTPException
+
 
 def create_app():
     # Cria a instância principal do servidor Flask
@@ -34,6 +36,11 @@ def create_app():
             "erro": error.message
         }
         return jsonify(response), error.status_code
+
+    @app.errorhandler(HTTPException)
+    def handle_http_exception(error):
+        """Erros HTTP normais (404, 405, 401...) mantêm o status original."""
+        return jsonify({"erro": error.description}), error.code
 
     # (Opcional) Tratador genérico para erros 500 não previstos (ex: Python sintaxe/bugs)
     @app.errorhandler(Exception)
