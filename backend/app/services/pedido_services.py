@@ -1,4 +1,5 @@
 from decimal import Decimal, InvalidOperation
+import unicodedata
 
 from app.models.status_pedido import StatusPedido
 from app.repositories.cliente_repository import buscar_cliente_por_usuario as buscar_cliente_repository
@@ -11,6 +12,13 @@ from app.repositories.pedido_repository import (
     criar_itens_pedido as criar_itens_repository,
 )
 from app.schemas.pedido_schema import validar_pedido as validar_pedido_schema
+from app.repositories.funcionario_repository import (
+    buscar_funcionario_por_usuario,
+)
+from app.repositories.pedido_repository import (
+    listar_pedidos as listar_pedidos_repository,
+    atualizar_status_pedido as atualizar_status_repository,
+)
 
 
 def criar_pedido(data: dict, id_usuario: int, taxa_entrega='0.00'):
@@ -62,3 +70,68 @@ def criar_pedido(data: dict, id_usuario: int, taxa_entrega='0.00'):
             'contato': pedido['contato'], 'endereco': pedido['endereco'],
             'forma_pagamento': pedido['forma_pagamento'], 'taxa_entrega': taxa,
             'valor_total': total, 'itens': pedido['itens']}
+
+
+def _obter_funcionario(id_usuario: int):
+    if type(id_usuario) is not int or id_usuario <= 0:
+        raise PermissionError("Autenticação necessária.")
+
+    funcionario = buscar_funcionario_por_usuario(id_usuario)
+
+    if (
+        funcionario is None
+        or not funcionario[0]
+        or unicodedata.normalize(
+            "NFKD",
+            funcionario[1].strip().casefold()
+        ).encode("ascii", "ignore").decode("ascii") != "funcionario"
+        or funcionario[2] is None
+    ):
+        raise PermissionError("Acesso exclusivo para funcionários.")
+
+    return funcionario[2]
+
+
+def listar_pedidos(id_usuario: int):
+    _obter_funcionario(id_usuario)
+
+    with transacao_pedido_repository() as conn:
+        return listar_pedidos_repository(conn)
+
+
+def aceitar_pedido(id_pedido: int, id_usuario: int):
+    id_funcionario = _obter_funcionario(id_usuario)
+
+    with transacao_pedido_repository() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT p.id_status, s.nome_status
+                FROM pedido p
+                JOIN status s ON s.id_status = p.id_status
+                WHERE p.id_pedido = %s
+                FOR UPDATE OF p
+                """,
+                (id_pedido,),
+            )
+            pedido = cursor.fetchone()
+
+        if pedido is None:
+            raise LookupError("Pedido não encontrado.")
+
+        if pedido[1].casefold() != "recebido":
+            raise ValueError("Somente pedidos recebidos podem ser aceitos.")
+
+        status = buscar_status_repository(conn, "Em preparação")
+        if status is None:
+            raise RuntimeError("Status 'Em preparação' não cadastrado.")
+
+        atualizar_status_repository(
+            conn, id_pedido, status[0], id_funcionario
+        )
+
+    return {
+        "id_pedido": id_pedido,
+        "status": "Em preparação",
+        "id_funcionario": id_funcionario,
+    }

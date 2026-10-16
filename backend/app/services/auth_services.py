@@ -110,7 +110,6 @@ def cadastrar_cliente(email, senha, nome, cpf, telefone=None):
 
 def autenticar_usuario(email, senha):
     email = email.strip().lower()
-
     usuario = buscar_usuario_por_email(email)
 
     if usuario is None:
@@ -119,7 +118,9 @@ def autenticar_usuario(email, senha):
     if not check_password_hash(usuario[3], senha):
         raise ValueError("E-mail ou senha inválidos.")
 
-    if usuario[2] == False:
+    if usuario[2] is False:
         raise ValueError("Usuário inativo.")
+    
+    
 
     return usuario
