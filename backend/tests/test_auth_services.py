@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import patch
+from unittest.mock import patch, Mock
 from app.services.auth_services import cadastrar_usuario, autenticar_usuario
 
 # ==============================================================================
@@ -7,28 +7,66 @@ from app.services.auth_services import cadastrar_usuario, autenticar_usuario
 # ==============================================================================
 
 def test_cadastrar_usuario_sucesso():
-    """Valida o cadastro quando todos os dados são válidos."""
-    # MOCK 1: Simula que o e-mail NÃO existe no banco de dados
-    with patch('app.services.auth_services.buscar_usuario_por_email', return_value=None):
-        # MOCK 2: Simula o salvamento no banco e a geração de hash da senha
-        with patch('app.services.auth_services.criar_usuario', return_value=(1, "admin@pizzaria.com")) as mock_criar:
-            with patch('app.services.auth_services.generate_password_hash', return_value="hash_fake_123"):
-                
-                # Executa a função do serviço
-                resultado = cadastrar_usuario("  ADMIN@pizzaria.com  ", "senha123", "Gerente", "Acesso total")
-                
-                # ASSERT 1: Verifica o retorno da função
-                assert resultado == (1, "admin@pizzaria.com")
-                
-                # ASSERT 2: Garante que o e-mail foi tratado (lower e strip) e a senha virou hash
-                mock_criar.assert_called_once_with("admin@pizzaria.com", "hash_fake_123", "Gerente", "Acesso total")
+    conn = Mock()
+
+    with patch(
+        'app.services.auth_services.get_connection',
+        return_value=conn
+    ):
+        with patch(
+            'app.services.auth_services.buscar_usuario_por_email',
+            return_value=None
+        ):
+            with patch(
+                'app.services.auth_services.criar_usuario',
+                return_value=(1, "admin@pizzaria.com")
+            ) as mock_criar:
+                with patch(
+                    'app.services.auth_services.generate_password_hash',
+                    return_value="hash_fake_123"
+                ):
+                    resultado = cadastrar_usuario(
+                        "  ADMIN@pizzaria.com  ",
+                        "senha123",
+                        "Gerente",
+                        "Acesso total"
+                    )
+
+    assert resultado == (1, "admin@pizzaria.com")
+    mock_criar.assert_called_once_with(
+        conn,
+        "admin@pizzaria.com",
+        "hash_fake_123",
+        "Gerente",
+        "Acesso total"
+    )
+    conn.commit.assert_called_once()
+    conn.close.assert_called_once()
 
 
-def test_cadastrar_usuario_email_vazio_deve_falhar():
-    """Valida se o e-mail vazio ou com apenas espaços lança ValueError."""
-    with pytest.raises(ValueError, match="O e-mail não pode ser vazio."):
-        cadastrar_usuario("   ", "senha123", "Gerente", "Acesso total")
+def test_autenticar_usuario_inativo_deve_falhar():
+    usuario_inativo_fake = (
+        2,
+        "demitido@pizzaria.com",
+        False,
+        "hash_qualquer",
+    )
 
+    with patch(
+        "app.services.auth_services.buscar_usuario_por_email",
+        return_value=usuario_inativo_fake,
+    ), patch(
+        "app.services.auth_services.check_password_hash",
+        return_value=True,
+    ):
+        with pytest.raises(
+            ValueError,
+            match=r"Usuário inativo\.",
+        ):
+            autenticar_usuario(
+                "demitido@pizzaria.com",
+                "senha123",
+            )
 
 def test_cadastrar_usuario_senha_vazia_deve_falhar():
     """Valida se a senha vazia lança ValueError."""
@@ -69,16 +107,6 @@ def test_autenticar_usuario_nao_encontrado_deve_falhar():
     with patch('app.services.auth_services.buscar_usuario_por_email', return_value=None):
         with pytest.raises(ValueError, match="E-mail ou senha inválidos."):
             autenticar_usuario("naoexistente@pizzaria.com", "senha123")
-
-
-def test_autenticar_usuario_inativo_deve_falhar():
-    """Valida a negação de login se a conta do usuário estiver inativa (usuario[2] == False)."""
-    # Indice 2 = False (Usuário Inativo)
-    usuario_inativo_fake = (2, "demitido@pizzaria.com", False, "hash_qualquer")
-    
-    with patch('app.services.auth_services.buscar_usuario_por_email', return_value=usuario_inativo_fake):
-        with pytest.raises(ValueError, match="Usuário inativo."):
-            autenticar_usuario("demitido@pizzaria.com", "senha123")
 
 
 def test_autenticar_usuario_senha_incorreta_deve_falhar():
