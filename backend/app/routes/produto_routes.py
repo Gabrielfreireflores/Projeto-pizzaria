@@ -14,5 +14,14 @@ def criar_produto():
 @produto_bp.route('/produtos', methods=['GET'])
 @produto_bp.route('/api/produtos', methods=['GET'])
 @produto_bp.route('/api/v1/produtos', methods=['GET'])
+
 def listar_produtos():
     return produto_controller.listar_produtos_controller()
+
+@produto_bp.route('/api/v1/produtos/<int:id_produto>', methods=['PUT'])
+def atualizar_produto(id_produto):
+    return produto_controller.atualizar_produto_controller(id_produto)
+
+@produto_bp.route('/api/v1/produtos/<int:id_produto>', methods=['DELETE'])
+def excluir_produto(id_produto):
+    return produto_controller.excluir_produto_controller(id_produto)

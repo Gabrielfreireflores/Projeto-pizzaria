@@ -11,6 +11,8 @@ export interface MenuItem {
   prices?: Record<Size, number>; // itens com tamanho P/G
   price?: number; // itens de preço único (bebidas)
   image: string;
+  /** id_produto do backend por tamanho; "unico" para itens sem tamanho P/G. */
+  backendIds?: Partial<Record<Size | "unico", number>>;
 }
 
 /** Linha do carrinho: um item do cardápio já com o tamanho escolhido. */
