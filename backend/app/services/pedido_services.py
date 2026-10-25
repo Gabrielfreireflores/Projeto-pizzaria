@@ -2,7 +2,10 @@ from decimal import Decimal, InvalidOperation
 import unicodedata
 
 from app.models.status_pedido import StatusPedido
-from app.repositories.cliente_repository import buscar_cliente_por_usuario as buscar_cliente_repository
+from app.repositories.cliente_repository import (
+    buscar_cliente_por_usuario as buscar_cliente_repository,
+    buscar_cliente_convidado as buscar_convidado_repository,
+)
 from app.repositories.endereco_repository import criar_endereco as criar_endereco_repository
 from app.repositories.produto_repository import buscar_produtos_para_pedido as buscar_produtos_repository
 from app.repositories.pedido_repository import (
@@ -21,9 +24,10 @@ from app.repositories.pedido_repository import (
 )
 
 
-def criar_pedido(data: dict, id_usuario: int, taxa_entrega='0.00'):
-    if type(id_usuario) is not int or id_usuario <= 0:
-        raise PermissionError('Cliente autenticado obrigatório.')
+def criar_pedido(data: dict, id_usuario=None, taxa_entrega='0.00'):
+    """id_usuario=None cria o pedido para o cliente técnico "Convidado" (sem login)."""
+    if id_usuario is not None and (type(id_usuario) is not int or id_usuario <= 0):
+        raise PermissionError('Cliente autenticado inválido.')
     pedido = validar_pedido_schema(data)
     try:
         taxa = Decimal(str(taxa_entrega))
@@ -33,9 +37,16 @@ def criar_pedido(data: dict, id_usuario: int, taxa_entrega='0.00'):
         taxa = taxa.quantize(Decimal('0.01'))
     except (InvalidOperation, ValueError):
         raise RuntimeError('Taxa de entrega do servidor inválida.') from None
+    if pedido['tipo_entrega'] == 'retirada':
+        taxa = Decimal('0.00')
 
     with transacao_pedido_repository() as conn:
-        cliente = buscar_cliente_repository(conn, id_usuario)
+        if id_usuario is None:
+            cliente = buscar_convidado_repository(conn)
+            if cliente is None:
+                raise RuntimeError('Cliente convidado não configurado (aplicar a migration 003).')
+        else:
+            cliente = buscar_cliente_repository(conn, id_usuario)
         # O PR #11 usa "Cliente"; o seed existente usa "cliente".
         if cliente is None or not cliente[1] or cliente[2].strip().casefold() != 'cliente':
             raise PermissionError('É necessário ter um cadastro de cliente ativo.')
@@ -61,13 +72,17 @@ def criar_pedido(data: dict, id_usuario: int, taxa_entrega='0.00'):
             raise RuntimeError('Status inicial não configurado no banco.')
         pedido.update(id_cliente=cliente[0], id_status=status[0], taxa_entrega=taxa,
                       valor_total=total)
-        pedido['id_endereco'] = criar_endereco_repository(conn, cliente[0], pedido['endereco'])
+        pedido['id_endereco'] = (
+            criar_endereco_repository(conn, cliente[0], pedido['endereco'])
+            if pedido['endereco'] else None
+        )
         resultado = criar_pedido_repository(conn, pedido)
         criar_itens_repository(conn, resultado[0], pedido['itens'])
 
     return {'id_pedido': resultado[0], 'status': StatusPedido.RECEBIDO.name,
             'id_status': status[0], 'data_hora_pedido': resultado[1].isoformat(),
-            'contato': pedido['contato'], 'endereco': pedido['endereco'],
+            'contato': pedido['contato'], 'tipo_entrega': pedido['tipo_entrega'],
+            'endereco': pedido['endereco'],
             'forma_pagamento': pedido['forma_pagamento'], 'taxa_entrega': taxa,
             'valor_total': total, 'itens': pedido['itens']}
 
