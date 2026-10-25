@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useState } from "react";
 import { MenuItem, Size } from "@/types/product";
-import { SIZE_LABEL, menu, precoMeioAMeio } from "@/lib/data/products";
+import { SIZE_LABEL, precoMeioAMeio } from "@/lib/data/products";
 import { useCart } from "@/hooks/use-cart";
 
 const currencyFormatter = new Intl.NumberFormat("pt-BR", {
@@ -27,7 +27,7 @@ function chipClass(active: boolean) {
   }`;
 }
 
-export function ProductCard({ item }: { item: MenuItem }) {
+export function ProductCard({ item, menu }: { item: MenuItem; menu: MenuItem[] }) {
   const { addItem } = useCart();
   const [size, setSize] = useState<Size>("G");
   const [added, setAdded] = useState(false);
@@ -48,6 +48,17 @@ export function ProductCard({ item }: { item: MenuItem }) {
   function handleAdd() {
     if (waitingHalf) return;
     const cleanNote = note.trim();
+
+    // No backend o meio a meio é cobrado pelo produto da metade mais cara;
+    // os dois sabores seguem na observação do item para a cozinha.
+    const billed =
+      half && prices && (half.prices?.[size] ?? 0) > prices[size] ? half : item;
+    const productId = prices ? billed.productIds?.[size] : item.productId;
+    if (productId === undefined) return;
+    const orderNote =
+      [half ? `Meio a meio: ${item.name} / ${half.name}` : "", cleanNote]
+        .filter(Boolean)
+        .join(" - ") || undefined;
     const label =
       item.category === "borda"
         ? `Borda ${item.name}`
@@ -72,6 +83,8 @@ export function ProductCard({ item }: { item: MenuItem }) {
       size: prices ? size : undefined,
       halfMenuItemId: half?.id,
       note: cleanNote || undefined,
+      productId,
+      orderNote,
     });
 
     setAdded(true);

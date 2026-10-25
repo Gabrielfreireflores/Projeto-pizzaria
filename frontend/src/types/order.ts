@@ -26,6 +26,9 @@ export const ORDER_STATUS_LABEL: Record<OrderStatus, string> = {
 
 export interface OrderItem {
   menuItemId: string;
+  /** id_produto cobrado no backend e observação enviada junto. */
+  productId?: number;
+  orderNote?: string;
   size?: Size;
   halfMenuItemId?: string;
   note?: string;

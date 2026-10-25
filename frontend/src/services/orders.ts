@@ -1,34 +1,93 @@
-import { NewOrder, Order } from "@/types/order";
+import { api } from "@/lib/api";
+import { NewOrder, Order, OrderItem, OrderStatus, PaymentMethod } from "@/types/order";
 
-// Camada de acesso a pedidos. Hoje grava no localStorage; quando o backend
-// estiver pronto, só o corpo destas funções muda (a assinatura continua igual).
-const STORAGE_KEY = "pizzaria-orders";
+const PAYMENT_LABEL: Record<PaymentMethod, string> = {
+  pix: "Pix",
+  cartao: "Cartão",
+  dinheiro: "Dinheiro",
+};
 
-function readAll(): Order[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? (JSON.parse(raw) as Order[]) : [];
-  } catch {
-    return [];
-  }
+const STATUS_BY_NAME: Record<string, OrderStatus> = {
+  recebido: "recebido",
+  "em preparação": "em_preparo",
+  "saiu para entrega": "pronto",
+  entregue: "entregue",
+};
+
+interface ApiPedido {
+  id_pedido: number;
+  status: string;
+  data_hora_pedido: string;
+  valor_total: string | number;
 }
 
-function writeAll(orders: Order[]) {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(orders));
-  } catch {
-    // armazenamento indisponível: o pedido ainda é confirmado na tela
+/** "Rua das Flores, 123" -> rua + número. Sem número no fim, vai tudo como rua. */
+function splitAddress(address: string) {
+  const text = address.trim();
+  const match = text.match(/^(.*?)[,\s]+(\d+[\w/-]*)$/);
+  if (match && match[1].trim().length >= 2) {
+    return { logradouro: match[1].trim(), numero: match[2] };
   }
+  return { logradouro: text };
 }
 
+/**
+ * O backend não aceita o mesmo produto duas vezes no pedido. Linhas do carrinho
+ * que cobram o mesmo produto (ex.: com observações diferentes) viram um item só.
+ */
+function toApiItems(items: OrderItem[]) {
+  const grouped = new Map<number, { quantidade: number; partes: { quantidade: number; obs: string }[] }>();
+
+  for (const item of items) {
+    if (!item.productId) {
+      throw new Error(
+        `"${item.name}" está desatualizado. Remova da sacola e adicione de novo.`
+      );
+    }
+    const entry = grouped.get(item.productId) ?? { quantidade: 0, partes: [] };
+    entry.quantidade += item.quantity;
+    entry.partes.push({ quantidade: item.quantity, obs: item.orderNote ?? "" });
+    grouped.set(item.productId, entry);
+  }
+
+  return [...grouped].map(([id_produto, { quantidade, partes }]) => {
+    const observacao =
+      partes.length === 1
+        ? partes[0].obs
+        : partes.map((p) => `${p.quantidade}x ${p.obs || "sem observação"}`).join(" | ");
+    return {
+      id_produto,
+      quantidade,
+      observacao: observacao ? observacao.slice(0, 500) : null,
+    };
+  });
+}
+
+/** Cria o pedido no backend (sem login: entra como cliente convidado). */
 export async function createOrder(data: NewOrder): Promise<Order> {
-  const order: Order = {
-    ...data,
-    number: `#${Date.now().toString().slice(-6)}`,
-    status: "recebido",
-    createdAt: new Date().toISOString(),
+  const body = {
+    contato: { nome: data.customer.name, telefone: data.customer.phone },
+    tipo_entrega: data.fulfillment,
+    ...(data.delivery && {
+      endereco: {
+        ...splitAddress(data.delivery.address),
+        bairro: data.delivery.neighborhood,
+      },
+    }),
+    forma_pagamento: PAYMENT_LABEL[data.paymentMethod],
+    itens: toApiItems(data.items),
   };
-  writeAll([order, ...readAll()]);
-  return order;
+
+  const pedido = await api<ApiPedido>("/api/v1/pedidos", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+
+  return {
+    ...data,
+    number: `#${pedido.id_pedido}`,
+    status: STATUS_BY_NAME[pedido.status.trim().toLowerCase()] ?? "recebido",
+    createdAt: pedido.data_hora_pedido,
+    total: Number(pedido.valor_total), // valor confirmado pelo backend (inclui taxa)
+  };
 }
