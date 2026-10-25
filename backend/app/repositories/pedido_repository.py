@@ -27,8 +27,9 @@ def criar_pedido(conn, pedido: dict):
         cursor.execute(
             """INSERT INTO pedido
             (id_cliente, id_funcionario, id_status, id_endereco,
-             forma_pagamento, taxa_entrega, valor_total)
-            VALUES (%s, 1, %s, %s, %s, %s, %s)
+             forma_pagamento, taxa_entrega, valor_total,
+             tipo_entrega, nome_contato, telefone_contato)
+            VALUES (%s, 1, %s, %s, %s, %s, %s, %s, %s, %s)
             RETURNING id_pedido, data_hora_pedido""",
             (
                 pedido['id_cliente'],
@@ -37,6 +38,9 @@ def criar_pedido(conn, pedido: dict):
                 pedido['forma_pagamento'],
                 pedido['taxa_entrega'],
                 pedido['valor_total'],
+                pedido['tipo_entrega'],
+                pedido['contato']['nome'],
+                pedido['contato']['telefone'],
             )
         )
         return cursor.fetchone()
@@ -75,11 +79,14 @@ def listar_pedidos(conn):
                 e.complemento,
                 e.bairro,
                 e.cidade,
-                e.uf
+                e.uf,
+                p.tipo_entrega,
+                COALESCE(p.nome_contato, c.nome),
+                p.telefone_contato
             FROM pedido p
             JOIN status s ON s.id_status = p.id_status
             JOIN cliente c ON c.id_cliente = p.id_cliente
-            JOIN endereco e ON e.id_endereco = p.id_endereco
+            LEFT JOIN endereco e ON e.id_endereco = p.id_endereco
             ORDER BY p.data_hora_pedido DESC
             """
         )
@@ -126,8 +133,10 @@ def listar_pedidos(conn):
             "forma_pagamento": p[7],
             "taxa_entrega": str(p[8]),
             "valor_total": str(p[9]),
-            "cliente": p[10],
-            "endereco": {
+            "cliente": p[19],
+            "telefone": p[20],
+            "tipo_entrega": p[18],
+            "endereco": None if p[5] is None else {
                 "cep": p[11],
                 "logradouro": p[12],
                 "numero": p[13],

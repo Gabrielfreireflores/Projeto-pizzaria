@@ -56,6 +56,34 @@ def test_contato_endereco_invalidos(payload, grupo, campo, valor):
         validar_pedido(payload)
 
 
+def test_endereco_enxuto_usa_padroes(payload):
+    payload['endereco'] = {'logradouro': 'Rua das Flores', 'bairro': 'Centro'}
+    endereco = validar_pedido(payload)['endereco']
+    assert endereco['numero'] == 'S/N'
+    assert endereco['cidade'] == 'Jardinópolis' and endereco['uf'] == 'SP'
+    assert endereco['complemento'] is None
+
+
+def test_retirada_dispensa_endereco(payload):
+    payload['tipo_entrega'] = 'retirada'
+    payload.pop('endereco')
+    pedido = validar_pedido(payload)
+    assert pedido['tipo_entrega'] == 'retirada' and pedido['endereco'] is None
+
+
+@pytest.mark.parametrize('tipo', ['', 'delivery', None, 1])
+def test_tipo_entrega_invalido(payload, tipo):
+    payload['tipo_entrega'] = tipo
+    with pytest.raises(ValueError):
+        validar_pedido(payload)
+
+
+def test_entrega_exige_logradouro_e_bairro(payload):
+    payload['endereco'] = {'numero': '10'}
+    with pytest.raises(ValueError):
+        validar_pedido(payload)
+
+
 def test_produto_duplicado(payload):
     payload['itens'].append(deepcopy(payload['itens'][0]))
     with pytest.raises(ValueError):
@@ -77,8 +105,18 @@ def http():
     return app.test_client()
 
 
-def test_sem_sessao(http, payload):
-    assert http.post('/api/v1/pedidos', json=payload).status_code == 401
+def test_sem_sessao_cria_pedido_como_convidado(http, payload, monkeypatch):
+    # Sem login o checkout segue como cliente convidado (id_usuario=None).
+    # O service é simulado para o teste não gravar pedido no banco.
+    chamadas = []
+
+    def criar_pedido_falso(data, id_usuario=None, taxa_entrega='0.00'):
+        chamadas.append(id_usuario)
+        return {'id_pedido': 1}
+
+    monkeypatch.setattr(pedido_services, 'criar_pedido', criar_pedido_falso)
+    assert http.post('/api/v1/pedidos', json=payload).status_code == 201
+    assert chamadas == [None]
 
 
 @pytest.mark.parametrize('corpo', ['{', '[]', 'null', '"texto"'])

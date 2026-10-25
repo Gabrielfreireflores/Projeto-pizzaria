@@ -43,7 +43,10 @@ function validate(form: CheckoutFormData): CheckoutFormErrors {
   if (form.name.trim().length < 3) {
     errors.name = "Informe seu nome.";
   }
-  if (form.phone.replace(/\D/g, "").length < 10) {
+  if (
+    form.phone.replace(/\D/g, "").length < 10 ||
+    !/^[+()\d .-]+$/.test(form.phone.trim())
+  ) {
     errors.phone = "Informe um telefone válido com DDD.";
   }
   if (form.fulfillment === "entrega") {
@@ -63,6 +66,8 @@ export default function CheckoutPage() {
   const [form, setForm] = useState<CheckoutFormData>(INITIAL_FORM);
   const [errors, setErrors] = useState<CheckoutFormErrors>({});
   const [order, setOrder] = useState<Order | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
 
   const isCartEmpty = items.length === 0;
 
@@ -81,27 +86,39 @@ export default function CheckoutPage() {
     setErrors(validationErrors);
     if (Object.keys(validationErrors).length > 0) return;
 
-    const created = await createOrder({
-      customer: { name: form.name.trim(), phone: form.phone },
-      fulfillment: form.fulfillment,
-      delivery:
-        form.fulfillment === "entrega"
-          ? { address: form.address.trim(), neighborhood: form.neighborhood.trim() }
-          : undefined,
-      paymentMethod: form.paymentMethod,
-      items: items.map(({ product, quantity }) => ({
-        menuItemId: product.menuItemId ?? product.id,
-        size: product.size,
-        halfMenuItemId: product.halfMenuItemId,
-        note: product.note,
-        name: product.name,
-        quantity,
-        unitPrice: product.price,
-      })),
-      total,
-    });
-    setOrder(created);
-    clearCart();
+    setSubmitting(true);
+    setSubmitError("");
+    try {
+      const created = await createOrder({
+        customer: { name: form.name.trim(), phone: form.phone.trim() },
+        fulfillment: form.fulfillment,
+        delivery:
+          form.fulfillment === "entrega"
+            ? { address: form.address.trim(), neighborhood: form.neighborhood.trim() }
+            : undefined,
+        paymentMethod: form.paymentMethod,
+        items: items.map(({ product, quantity }) => ({
+          menuItemId: product.menuItemId ?? product.id,
+          productId: product.productId,
+          orderNote: product.orderNote,
+          size: product.size,
+          halfMenuItemId: product.halfMenuItemId,
+          note: product.note,
+          name: product.name,
+          quantity,
+          unitPrice: product.price,
+        })),
+        total,
+      });
+      setOrder(created);
+      clearCart();
+    } catch (e) {
+      setSubmitError(
+        e instanceof Error ? e.message : "Não foi possível enviar o pedido."
+      );
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   if (order) {
@@ -279,11 +296,18 @@ export default function CheckoutPage() {
               </div>
             </fieldset>
 
+            {submitError && (
+              <p role="alert" className="text-sm text-brick">
+                {submitError}
+              </p>
+            )}
+
             <button
               type="submit"
-              className="w-full rounded-sm bg-brick px-6 py-3 text-sm font-medium text-background transition-colors hover:bg-brick-dark"
+              disabled={submitting}
+              className="w-full rounded-sm bg-brick px-6 py-3 text-sm font-medium text-background transition-colors hover:bg-brick-dark disabled:cursor-not-allowed disabled:opacity-50"
             >
-              Confirmar pedido
+              {submitting ? "Enviando..." : "Confirmar pedido"}
             </button>
           </form>
 
