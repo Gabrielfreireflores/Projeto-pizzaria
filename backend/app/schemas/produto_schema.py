@@ -44,9 +44,9 @@ def validar_produto(dados):
     }
     if type(produto['disponivel']) is not bool:
         raise ValueError('disponivel deve ser booleano.')
-    ingredientes = dados.get('ingredientes')
-    if not isinstance(ingredientes, list) or not ingredientes:
-        raise ValueError('Informe ao menos um ingrediente.')
+    ingredientes = dados.get('ingredientes', [])
+    if not isinstance(ingredientes, list):
+        raise ValueError('Ingredientes deve ser uma lista')
     vistos = set()
     produto['ingredientes'] = []
     for item in ingredientes:

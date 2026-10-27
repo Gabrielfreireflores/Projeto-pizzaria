@@ -16,3 +16,7 @@ def listar_pedidos():
 @pedido_bp.route('/<int:id_pedido>/aceitar', methods=['POST'])
 def aceitar_pedido(id_pedido):
     return pedido_controller.aceitar_pedido_controller(id_pedido)
+
+@pedido_bp.route('/<int:id_pedido>/status', methods=['PUT'])
+def alterar_status_pedido(id_pedido):
+    return pedido_controller.alterar_status_pedido_controller(id_pedido)

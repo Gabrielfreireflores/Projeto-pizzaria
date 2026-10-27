@@ -68,3 +68,31 @@ def aceitar_pedido_controller(id_pedido):
     except (psycopg.Error, RuntimeError):
         current_app.logger.exception("Falha ao aceitar pedido.")
         return jsonify({"erro": "Não foi possível aceitar o pedido."}), 500
+
+def alterar_status_pedido_controller(id_pedido):
+    id_usuario = session.get("id_usuario")
+
+    if type(id_usuario) is not int or id_usuario <= 0:
+        return jsonify({"erro": "Autenticação necessária."}), 401
+
+    try:
+        data = request.get_json()
+    except (BadRequest, UnsupportedMediaType):
+        return jsonify({"erro": "Envie um objeto JSON válido."}), 400
+    if not isinstance(data, dict):
+        return jsonify({"erro": "Envie um objeto JSON."}), 400
+
+    try:
+        resultado = pedido_services.alterar_status_pedido(id_pedido, data, id_usuario)
+        return jsonify(resultado), 200
+    except PermissionError as e:
+        return jsonify({"erro": str(e)}), 403
+    except LookupError as e:
+        return jsonify({"erro": str(e)}), 404
+    except pedido_services.TransicaoInvalida as e:
+        return jsonify({"erro": str(e)}), 409
+    except ValueError as e:
+        return jsonify({"erro": str(e)}), 400
+    except (psycopg.Error, RuntimeError):
+        current_app.logger.exception("Falha ao alterar status do pedido.")
+        return jsonify({"erro": "Não foi possível atualizar o pedido."}), 500

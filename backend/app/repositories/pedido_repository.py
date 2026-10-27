@@ -164,3 +164,27 @@ def atualizar_status_pedido(conn, id_pedido: int, id_status: int,
             (id_status, id_funcionario, id_pedido),
         )
         return cursor.fetchone()
+
+def lista_status(conn):
+    """Devolve [(id_status, nome_status), ...]"""
+    with conn.cursor() as cursor:
+        cursor.execute('SELECT id_status, nome_status FROM status ORDER BY id_status')
+        return cursor.fetchall()
+
+def buscar_status_do_pedido(conn, id_pedido: int):
+    """Devolve o id_status atual (trabando a linha) ou None se o pedido ainda não existe"""
+    with conn.cursor() as cursor:
+        cursor.execute(
+            'SELECT id_status FROM pedido WHERE id_pedido = %s FOR UPDATE',
+            (id_pedido,),
+        )
+        linha = cursor.fetchone()
+        return linha[0] if linha else None
+
+def trocar_status_pedido(conn, id_pedido: int, id_status: int):
+    with conn.cursor() as cursor:
+        cursor.execute(
+            'UPDATE pedido SET id_status = %s WHERE id_pedido = %s',
+            (id_status, id_pedido),
+        )
+

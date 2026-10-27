@@ -28,7 +28,7 @@ def payload():
     ('preco', '-0.01'), ('preco', True), ('preco', 'NaN'),
     ('preco', 'Infinity'), ('preco', '1.001'), ('preco', '100000000'),
     ('id_categoria', None), ('id_categoria', True), ('id_categoria', 0),
-    ('id_categoria', 2147483648), ('ingredientes', []), ('ingredientes', None),
+    ('id_categoria', 2147483648), ('ingredientes', None),
     ('ingredientes', [1]), ('disponivel', 'true'),
 ])
 def test_campos_invalidos(payload, campo, valor):
@@ -55,6 +55,14 @@ def test_preco_zero_e_normalizacao(payload):
     produto = validar_produto(payload)
     assert str(produto['preco']) == '0.00'
     assert produto['nome'] == 'Pizza'
+
+@pytest.mark.parametrize('sem_ingredientes', [[], None])
+def test_ingredientes_sao_opcionais(payload, sem_ingredientes):
+    # Bebidas não têm ingrediente: lista vazia ou campo ausente é aceito.
+    payload.pop('ingredientes')
+    if sem_ingredientes is not None:
+        payload['ingredientes'] = sem_ingredientes
+    assert validar_produto(payload)['ingredientes'] == []    
 
 
 def test_sem_autenticacao(payload):

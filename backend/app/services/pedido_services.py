@@ -150,3 +150,69 @@ def aceitar_pedido(id_pedido: int, id_usuario: int):
         "status": "Em preparação",
         "id_funcionario": id_funcionario,
     }
+
+# --- Mudança de status depois do aceite --------------------------------------
+# status atual (sem acento, minúsculas) -> próximos status permitidos.
+# O "aceitar" (Recebido -> Em preparação) continua na função aceitar_pedido.
+TRANSICOES_STATUS = {
+    'em preparacao': ('Saiu para entrega',),
+    'saiu para entrega': ('Entregue',),
+}
+
+
+class TransicaoInvalida(ValueError):
+    """O pedido não pode ir do status atual para o status pedido."""
+
+
+def _chave_status(texto: str) -> str:
+    sem_acento = unicodedata.normalize('NFD', texto).encode('ascii', 'ignore').decode()
+    return sem_acento.strip().casefold()
+
+
+def alterar_status_pedido(id_pedido: int, data: dict, id_usuario: int):
+    _obter_funcionario(id_usuario)
+
+    texto = data.get('status')
+    if not isinstance(texto, str) or not texto.strip():
+        raise ValueError('Informe o novo status.')
+
+    with transacao_pedido_repository() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT s.nome_status, p.id_funcionario
+                FROM pedido p
+                JOIN status s ON s.id_status = p.id_status
+                WHERE p.id_pedido = %s
+                FOR UPDATE OF p
+                """,
+                (id_pedido,),
+            )
+            pedido = cursor.fetchone()
+
+        if pedido is None:
+            raise LookupError('Pedido não encontrado.')
+
+        atual, id_funcionario_pedido = pedido
+        permitidos = TRANSICOES_STATUS.get(_chave_status(atual), ())
+        novo_nome = next(
+            (nome for nome in permitidos if _chave_status(nome) == _chave_status(texto)),
+            None,
+        )
+        if novo_nome is None:
+            raise TransicaoInvalida(
+                f'Não é possível mudar o pedido de "{atual}" para "{texto.strip()}".'
+            )
+
+        status = buscar_status_repository(conn, novo_nome)
+        if status is None:
+            raise RuntimeError(f"Status '{novo_nome}' não cadastrado.")
+
+        # Mantém o funcionário que já era responsável (quem aceitou o pedido).
+        atualizar_status_repository(conn, id_pedido, status[0], id_funcionario_pedido)
+
+    return {
+        'id_pedido': id_pedido,
+        'status': novo_nome,
+        'id_funcionario': id_funcionario_pedido,
+    }

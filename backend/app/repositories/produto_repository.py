@@ -6,7 +6,7 @@ def listar_produtos():
     try:
         with conn.cursor() as cursor:
             cursor.execute(
-                """SELECT p.id_produto, p.nome, p.tamanho, p.preco, p.disponivel,
+                """SELECT p.id_produto, p.nome, p.tamanho, p.preco, p.disponivel, p.foto,
                           c.id_categoria, c.nome, i.id_ingrediente, i.nome,
                           ip.quantidade_necessaria, i.unidade_medida
                 FROM produto p JOIN categoria c ON c.id_categoria = p.id_categoria
@@ -34,11 +34,11 @@ def criar_produto(produto: dict):
     try:
         with conn.cursor() as cursor:
             cursor.execute(
-                """INSERT INTO produto (nome, tamanho, preco, id_categoria, disponivel)
-                VALUES (%s, %s, %s, %s, %s)
-                RETURNING id_produto, nome, tamanho, preco, id_categoria, disponivel""",
+                """INSERT INTO produto (nome, tamanho, preco, id_categoria, disponivel, foto)
+                VALUES (%s, %s, %s, %s, %s, %s)
+                RETURNING id_produto, nome, tamanho, preco, id_categoria, disponivel, foto""",
                 (produto['nome'], produto['tamanho'], produto['preco'],
-                 produto['id_categoria'], produto['disponivel'])
+                 produto['id_categoria'], produto['disponivel'], produto.get("foto"),)
             )
             resultado = cursor.fetchone()
             cursor.executemany(
@@ -51,6 +51,59 @@ def criar_produto(produto: dict):
             # Produto e receita são persistidos juntos.
             conn.commit()
             return resultado
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        conn.close()
+
+def atualizar_produto(id_produto: int, produto: dict):
+    """Atualiza o produto e substitui a receita. Devolve None se o produto não existe."""
+    conn = get_connection()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute(
+                """UPDATE produto
+                SET nome = %s, tamanho = %s, preco = %s, id_categoria = %s, disponivel = %s, foto = COALESCE(%s, foto)
+                WHERE id_produto = %s
+                RETURNING id_produto, nome, tamanho, preco, id_categoria, disponivel, foto""",
+                (produto['nome'], produto['tamanho'], produto['preco'],
+                 produto['id_categoria'], produto['disponivel'], produto.get("foto"), id_produto)
+            )
+            resultado = cursor.fetchone()
+            if resultado is None:
+                conn.rollback()
+                return None
+            cursor.execute(
+                "DELETE FROM ingrediente_produto WHERE id_produto = %s", (id_produto,)
+            )
+            cursor.executemany(
+                """INSERT INTO ingrediente_produto
+                (id_produto, id_ingrediente, quantidade_necessaria)
+                VALUES (%s, %s, %s)""",
+                [(id_produto, item['id_ingrediente'], item['quantidade_necessaria'])
+                 for item in produto['ingredientes']]
+            )
+            conn.commit()
+            return resultado
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        conn.close()
+
+
+def excluir_produto(id_produto: int) -> bool:
+    conn = get_connection()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute(
+                "DELETE FROM ingrediente_produto WHERE id_produto = %s", (id_produto,)
+            )
+            cursor.execute("DELETE FROM produto WHERE id_produto = %s", (id_produto,))
+            removido = cursor.rowcount > 0
+            conn.commit()
+            return removido
     except Exception:
         conn.rollback()
         raise
