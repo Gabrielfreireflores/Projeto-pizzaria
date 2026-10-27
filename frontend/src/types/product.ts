@@ -11,8 +11,10 @@ export interface MenuItem {
   prices?: Record<Size, number>; // itens com tamanho P/G
   price?: number; // itens de preço único (bebidas)
   image: string;
-  /** id_produto do backend por tamanho; "unico" para itens sem tamanho P/G. */
-  backendIds?: Partial<Record<Size | "unico", number>>;
+  /** id_produto no backend: um por tamanho (pizzas e bordas)... */
+  productIds?: Partial<Record<Size, number>>;
+  /** ...ou um só, nos itens de preço único (bebidas). */
+  productId?: number;
 }
 
 /** Linha do carrinho: um item do cardápio já com o tamanho escolhido. */
@@ -30,4 +32,8 @@ export interface Product {
   halfMenuItemId?: string;
   /** Observação do cliente (ex.: retirar ingredientes). */
   note?: string;
+  /** id_produto que será cobrado no backend (no meio a meio, o da metade mais cara). */
+  productId?: number;
+  /** Texto enviado como observação do item (inclui "Meio a meio: A / B"). */
+  orderNote?: string;
 }

@@ -1,77 +1,84 @@
-import { api } from "@/services/api";
+import { api } from "@/lib/api";
+import { FOTOS, SEM_FOTO, slug } from "@/lib/data/products";
 import { MenuItem, ProductCategory, Size } from "@/types/product";
 
-interface CardapioProduto {
+interface ApiProduto {
   id_produto: number;
   nome: string;
-  tamanho: string | null;
-  preco: string; // o backend manda como texto: "49.90"
+  tamanho: string;
+  preco: string;
   foto: string | null;
   descricao: string | null;
 }
-interface CardapioCategoria {
+
+interface ApiCategoria {
   id_categoria: number;
   nome: string;
-  produtos: CardapioProduto[];
+  produtos: ApiProduto[];
 }
 
-const SEM_FOTO = "/produtos/sem-foto.svg";
+const norm = (text: string) => text.trim().toLowerCase();
 
-const norm = (t: string) =>
-  t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
-const slug = (t: string) => norm(t).replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
-
-// Nome da categoria no banco -> categoria do front.
-const CATEGORIAS: Record<string, ProductCategory> = {
-  pizzas: "salgada",
+// Categorias do backend -> categorias do frontend. Outras categorias são ignoradas.
+const CATEGORY_BY_NAME: Record<string, ProductCategory> = {
   "pizzas salgadas": "salgada",
   "pizzas doces": "doce",
   bordas: "borda",
   bebidas: "bebida",
 };
 
-const TAMANHOS: Record<string, Size> = {
-  p: "P", pequena: "P", pequeno: "P",
-  g: "G", grande: "G",
-};
+// No backend cada tamanho é um produto; "Único" (ou qualquer outro) = preço único.
+const SIZE_BY_LABEL: Record<string, Size> = { pequena: "P", grande: "G" };
 
+// Só aceita foto do backend se o Next puder exibi-la (arquivo local ou Unsplash).
+const fotoValida = (foto: string | null) =>
+  foto && (foto.startsWith("/") || foto.startsWith("https://images.unsplash.com/"))
+    ? foto
+    : undefined;
+
+/** Lê o cardápio do backend e agrupa os produtos (um por tamanho) em itens com P/G. */
 export async function fetchMenu(): Promise<MenuItem[]> {
-  const { categorias } = (await api.cardapio()) as { categorias: CardapioCategoria[] };
-  const itens = new Map<string, MenuItem>();
+  const { categorias } = await api<{ categorias: ApiCategoria[] }>("/api/v1/cardapio");
 
-  for (const cat of categorias) {
-    const category = CATEGORIAS[norm(cat.nome)];
-    if (!category) continue; // categoria que o front ainda não conhece
+  const items = new Map<string, MenuItem & { order: number }>();
 
-    for (const p of cat.produtos) {
-      const size = TAMANHOS[norm(p.tamanho ?? "")];
-      const name = size ? p.nome : [p.nome, p.tamanho].filter(Boolean).join(" ");
-      // Pizzas P/G viram um item só; o resto é um item por produto.
+  for (const categoria of categorias) {
+    const category = CATEGORY_BY_NAME[norm(categoria.nome)];
+    if (!category) continue;
+
+    for (const produto of categoria.produtos) {
+      // Bordas são cadastradas como "Borda Catupiry" para não colidir com a pizza.
+      const name = category === "borda" ? produto.nome.replace(/^borda\s+/i, "") : produto.nome;
       const id = `${category}-${slug(name)}`;
+      const price = Number(produto.preco);
+      const size = SIZE_BY_LABEL[norm(produto.tamanho)];
 
-      let item = itens.get(id);
+      let item = items.get(id);
       if (!item) {
         item = {
           id,
           category,
           name,
-          ingredients: p.descricao ?? undefined,
-          image: p.foto ?? SEM_FOTO,
-          backendIds: {},
+          image: FOTOS[id] ?? fotoValida(produto.foto) ?? SEM_FOTO,
+          order: produto.id_produto,
         };
-        itens.set(id, item);
+        items.set(id, item);
       }
+      item.order = Math.min(item.order, produto.id_produto);
+      item.ingredients ??= produto.descricao ?? undefined;
 
-      const preco = Number(p.preco);
       if (size) {
-        item.prices = { ...item.prices, [size]: preco } as Record<Size, number>;
-        item.backendIds![size] = p.id_produto;
+        item.prices = { ...item.prices, [size]: price } as Record<Size, number>;
+        item.productIds = { ...item.productIds, [size]: produto.id_produto };
       } else {
-        item.price = preco;
-        item.backendIds!.unico = p.id_produto;
+        item.price = price;
+        item.productId = produto.id_produto;
       }
     }
   }
 
-  return [...itens.values()];
+  return [...items.values()]
+    .filter((item) => !item.prices || (item.prices.P && item.prices.G)) // precisa dos dois tamanhos
+    .sort((a, b) => a.order - b.order)
+    .map(({ order: _order, ...item }) => item);
 }

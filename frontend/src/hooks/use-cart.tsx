@@ -11,7 +11,7 @@ import {
 import { Product } from "@/types/product";
 import { CartItem } from "@/types/cart";
 
-const STORAGE_KEY = "pizzaria-barriga:cart";
+const STORAGE_KEY = "pizzaria-barriga:cart:v2";
 
 interface CartContextValue {
   items: CartItem[];

@@ -27,8 +27,9 @@ def criar_pedido(conn, pedido: dict):
         cursor.execute(
             """INSERT INTO pedido
             (id_cliente, id_funcionario, id_status, id_endereco,
-             forma_pagamento, taxa_entrega, valor_total)
-            VALUES (%s, 1, %s, %s, %s, %s, %s)
+             forma_pagamento, taxa_entrega, valor_total,
+             tipo_entrega, nome_contato, telefone_contato)
+            VALUES (%s, 1, %s, %s, %s, %s, %s, %s, %s, %s)
             RETURNING id_pedido, data_hora_pedido""",
             (
                 pedido['id_cliente'],
@@ -37,6 +38,9 @@ def criar_pedido(conn, pedido: dict):
                 pedido['forma_pagamento'],
                 pedido['taxa_entrega'],
                 pedido['valor_total'],
+                pedido['tipo_entrega'],
+                pedido['contato']['nome'],
+                pedido['contato']['telefone'],
             )
         )
         return cursor.fetchone()
@@ -75,11 +79,14 @@ def listar_pedidos(conn):
                 e.complemento,
                 e.bairro,
                 e.cidade,
-                e.uf
+                e.uf,
+                p.tipo_entrega,
+                COALESCE(p.nome_contato, c.nome),
+                p.telefone_contato
             FROM pedido p
             JOIN status s ON s.id_status = p.id_status
             JOIN cliente c ON c.id_cliente = p.id_cliente
-            JOIN endereco e ON e.id_endereco = p.id_endereco
+            LEFT JOIN endereco e ON e.id_endereco = p.id_endereco
             ORDER BY p.data_hora_pedido DESC
             """
         )
@@ -126,8 +133,10 @@ def listar_pedidos(conn):
             "forma_pagamento": p[7],
             "taxa_entrega": str(p[8]),
             "valor_total": str(p[9]),
-            "cliente": p[10],
-            "endereco": {
+            "cliente": p[19],
+            "telefone": p[20],
+            "tipo_entrega": p[18],
+            "endereco": None if p[5] is None else {
                 "cep": p[11],
                 "logradouro": p[12],
                 "numero": p[13],
@@ -179,68 +188,3 @@ def trocar_status_pedido(conn, id_pedido: int, id_status: int):
             (id_status, id_pedido),
         )
 
-# --- Mudança de status depois do aceite --------------------------------------
-# status atual (sem acento, minúsculas) -> próximos status permitidos.
-# O "aceitar" (Recebido -> Em preparação) continua na função aceitar_pedido.
-TRANSICOES_STATUS = {
-    'em preparacao': ('Saiu para entrega',),
-    'saiu para entrega': ('Entregue',),
-}
-
-
-class TransicaoInvalida(ValueError):
-    """O pedido não pode ir do status atual para o status pedido."""
-
-
-def _chave_status(texto: str) -> str:
-    sem_acento = unicodedata.normalize('NFD', texto).encode('ascii', 'ignore').decode()
-    return sem_acento.strip().casefold()
-
-
-def alterar_status_pedido(id_pedido: int, data: dict, id_usuario: int):
-    _obter_funcionario(id_usuario)
-
-    texto = data.get('status')
-    if not isinstance(texto, str) or not texto.strip():
-        raise ValueError('Informe o novo status.')
-
-    with transacao_pedido_repository() as conn:
-        with conn.cursor() as cursor:
-            cursor.execute(
-                """
-                SELECT s.nome_status, p.id_funcionario
-                FROM pedido p
-                JOIN status s ON s.id_status = p.id_status
-                WHERE p.id_pedido = %s
-                FOR UPDATE OF p
-                """,
-                (id_pedido,),
-            )
-            pedido = cursor.fetchone()
-
-        if pedido is None:
-            raise LookupError('Pedido não encontrado.')
-
-        atual, id_funcionario_pedido = pedido
-        permitidos = TRANSICOES_STATUS.get(_chave_status(atual), ())
-        novo_nome = next(
-            (nome for nome in permitidos if _chave_status(nome) == _chave_status(texto)),
-            None,
-        )
-        if novo_nome is None:
-            raise TransicaoInvalida(
-                f'Não é possível mudar o pedido de "{atual}" para "{texto.strip()}".'
-            )
-
-        status = buscar_status_repository(conn, novo_nome)
-        if status is None:
-            raise RuntimeError(f"Status '{novo_nome}' não cadastrado.")
-
-        # Mantém o funcionário que já era responsável (quem aceitou o pedido).
-        atualizar_status_repository(conn, id_pedido, status[0], id_funcionario_pedido)
-
-    return {
-        'id_pedido': id_pedido,
-        'status': novo_nome,
-        'id_funcionario': id_funcionario_pedido,
-    }

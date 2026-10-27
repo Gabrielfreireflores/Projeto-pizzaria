@@ -1,5 +1,13 @@
 import re
 
+# Valores usados quando o checkout simplificado não envia o campo.
+# CEP_PADRAO é um marcador: trocar pelo CEP real da pizzaria, se houver.
+CIDADE_PADRAO = 'Jardinópolis'
+UF_PADRAO = 'SP'
+CEP_PADRAO = '00000-000'
+NUMERO_PADRAO = 'S/N'
+TIPOS_ENTREGA = ('entrega', 'retirada')
+
 
 def _texto(valor, campo, limite):
     if not isinstance(valor, str) or not valor.strip() or len(valor.strip()) > limite:
@@ -7,30 +15,47 @@ def _texto(valor, campo, limite):
     return valor.strip()
 
 
-def validar_pedido(data: dict):
-    if not isinstance(data, dict):
-        raise ValueError('Envie um objeto JSON.')
-    contato = data.get('contato')
-    endereco = data.get('endereco')
-    if not isinstance(contato, dict) or not isinstance(endereco, dict):
-        raise ValueError('Informe os objetos contato e endereco.')
-    nome = _texto(contato.get('nome'), 'nome', 120)
-    telefone = _texto(contato.get('telefone'), 'telefone', 20)
-    if (not re.fullmatch(r'[+()\d .-]+', telefone)
-            or not 10 <= len(re.sub(r'\D', '', telefone)) <= 15):
-        raise ValueError('Telefone inválido.')
-    entrega = {campo: _texto(endereco.get(campo), campo, limite)
-               for campo, limite in [('cep', 9), ('logradouro', 160), ('numero', 20),
-                                     ('bairro', 100), ('cidade', 100), ('uf', 2)]}
+def _validar_endereco(endereco):
+    """Obrigatórios: logradouro e bairro. Os demais campos, se vierem, são validados;
+    se não vierem, usam os valores padrão da pizzaria (entrega local)."""
+    if not isinstance(endereco, dict):
+        raise ValueError('Informe o objeto endereco para entrega.')
+    entrega = {'logradouro': _texto(endereco.get('logradouro'), 'logradouro', 160),
+               'bairro': _texto(endereco.get('bairro'), 'bairro', 100)}
+    entrega['numero'] = (_texto(endereco['numero'], 'numero', 20)
+                         if endereco.get('numero') not in (None, '') else NUMERO_PADRAO)
+    entrega['cep'] = (_texto(endereco['cep'], 'cep', 9)
+                      if endereco.get('cep') is not None else CEP_PADRAO)
     if not re.fullmatch(r'\d{5}-?\d{3}', entrega['cep']):
         raise ValueError('CEP inválido.')
-    entrega['uf'] = entrega['uf'].upper()
+    entrega['cidade'] = (_texto(endereco['cidade'], 'cidade', 100)
+                         if endereco.get('cidade') is not None else CIDADE_PADRAO)
+    entrega['uf'] = (_texto(endereco['uf'], 'uf', 2)
+                     if endereco.get('uf') is not None else UF_PADRAO).upper()
     if not re.fullmatch(r'[A-Z]{2}', entrega['uf']):
         raise ValueError('UF deve ter duas letras.')
     complemento = endereco.get('complemento')
     if complemento is not None and (not isinstance(complemento, str) or len(complemento) > 100):
         raise ValueError('Complemento deve ter até 100 caracteres.')
     entrega['complemento'] = complemento.strip() if complemento else None
+    return entrega
+
+
+def validar_pedido(data: dict):
+    if not isinstance(data, dict):
+        raise ValueError('Envie um objeto JSON.')
+    contato = data.get('contato')
+    if not isinstance(contato, dict):
+        raise ValueError('Informe o objeto contato.')
+    tipo_entrega = data.get('tipo_entrega', 'entrega')
+    if tipo_entrega not in TIPOS_ENTREGA:
+        raise ValueError('tipo_entrega deve ser "entrega" ou "retirada".')
+    nome = _texto(contato.get('nome'), 'nome', 120)
+    telefone = _texto(contato.get('telefone'), 'telefone', 20)
+    if (not re.fullmatch(r'[+()\d .-]+', telefone)
+            or not 10 <= len(re.sub(r'\D', '', telefone)) <= 15):
+        raise ValueError('Telefone inválido.')
+    entrega = _validar_endereco(data.get('endereco')) if tipo_entrega == 'entrega' else None
     itens = data.get('itens')
     if not isinstance(itens, list) or not 1 <= len(itens) <= 100:
         raise ValueError('Informe de 1 a 100 itens.')
@@ -53,6 +78,7 @@ def validar_pedido(data: dict):
             raise ValueError('Observação deve ter até 500 caracteres.')
         normalizados.append({'id_produto': identificador, 'quantidade': quantidade,
                              'observacao': observacao})
-    return {'contato': {'nome': nome, 'telefone': telefone}, 'endereco': entrega,
+    return {'contato': {'nome': nome, 'telefone': telefone}, 'tipo_entrega': tipo_entrega,
+            'endereco': entrega,
             'forma_pagamento': _texto(data.get('forma_pagamento'), 'forma_pagamento', 40),
             'itens': normalizados}
