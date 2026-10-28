@@ -27,8 +27,17 @@ function chipClass(active: boolean) {
   }`;
 }
 
-export function ProductCard({ item, menu }: { item: MenuItem; menu: MenuItem[] }) {
+interface ProductCardProps {
+  item: MenuItem;
+  menu: MenuItem[];
+  /** Itens com tamanho (pizzas, bordas) abrem as opções quando expandidos. */
+  expanded: boolean;
+  onToggle: () => void;
+}
+
+export function ProductCard({ item, menu, expanded, onToggle }: ProductCardProps) {
   const { addItem } = useCart();
+  // O estado fica no próprio card: recolher ou abrir outro item não perde as escolhas.
   const [size, setSize] = useState<Size>("G");
   const [added, setAdded] = useState(false);
   const [halfMode, setHalfMode] = useState(false);
@@ -41,9 +50,16 @@ export function ProductCard({ item, menu }: { item: MenuItem; menu: MenuItem[] }
   const half = halfMode ? menu.find((m) => m.id === halfId) : undefined;
   const waitingHalf = halfMode && !half;
 
+  const expandable = Boolean(prices);
+  const open = expandable && expanded;
+  const panelId = `opcoes-${item.id}`;
+
   const priceFor = (s: Size) =>
     prices ? (half ? precoMeioAMeio(item, half, s) : prices[s]) : (item.price ?? 0);
   const price = prices ? priceFor(size) : (item.price ?? 0);
+  const startingAt = prices ? Math.min(prices.P, prices.G) : 0;
+
+  const chosen = [half && `½ ${half.name}`, note.trim() && "com observação"].filter(Boolean);
 
   function handleAdd() {
     if (waitingHalf) return;
@@ -75,7 +91,7 @@ export function ProductCard({ item, menu }: { item: MenuItem; menu: MenuItem[] }
       category: item.category,
       name: prices ? `${label} (${SIZE_LABEL[size]})` : label,
       description: half
-        ? `½ ${item.name}: ${item.ingredients}; ½ ${half.name}: ${half.ingredients}`
+        ? `½ ${item.name}: ${item.ingredients ?? ""}; ½ ${half.name}: ${half.ingredients ?? ""}`
         : (item.ingredients ?? ""),
       price,
       image: item.image,
@@ -95,62 +111,142 @@ export function ProductCard({ item, menu }: { item: MenuItem; menu: MenuItem[] }
     setHalfId("");
   }
 
+  const addButton = (
+    <button
+      type="button"
+      onClick={handleAdd}
+      disabled={waitingHalf}
+      className="w-full rounded-sm bg-brick px-4 py-3 text-sm font-medium text-background transition-colors hover:bg-brick-dark disabled:cursor-not-allowed disabled:opacity-50"
+    >
+      {added
+        ? "Adicionado!"
+        : waitingHalf
+          ? "Escolha o segundo sabor"
+          : `Adicionar · ${currencyFormatter.format(price)}`}
+    </button>
+  );
+
+  const image = (
+    <span className="relative block h-32 w-full sm:h-36">
+      <Image
+        src={item.image}
+        alt={expandable ? "" : item.name}
+        fill
+        sizes="(min-width: 1280px) 25vw, (min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+        className="object-cover"
+      />
+    </span>
+  );
+
   return (
-    <div className="flex flex-col overflow-hidden rounded-lg border border-border bg-background shadow-sm">
-      <div className="relative h-40 w-full sm:h-44">
-        <Image
-          src={item.image}
-          alt={item.name}
-          fill
-          sizes="(min-width: 1280px) 25vw, (min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
-          className="object-cover"
-        />
-      </div>
+    <div
+      onKeyDown={(e) => {
+        if (e.key === "Escape" && open) onToggle();
+      }}
+      className={`relative flex flex-col overflow-hidden rounded-lg border bg-background shadow-sm transition-shadow ${
+        open
+          ? "border-brick shadow-md after:pointer-events-none after:absolute after:inset-0 after:rounded-lg after:ring-1 after:ring-inset after:ring-brick"
+          : "border-border"
+      }`}
+    >
+      {expandable ? (
+        <h3>
+          <button
+            type="button"
+            onClick={onToggle}
+            aria-expanded={open}
+            aria-controls={panelId}
+            className="block w-full text-left"
+          >
+            {image}
+            <span className="block p-4">
+              <span className="flex items-start justify-between gap-2">
+                <span className="text-lg font-semibold text-char">{item.name}</span>
+                <svg
+                  aria-hidden="true"
+                  viewBox="0 0 20 20"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  className={`mt-1 h-5 w-5 shrink-0 text-muted-foreground transition-transform ${
+                    open ? "rotate-180" : ""
+                  }`}
+                >
+                  <path d="M5 8l5 5 5-5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </span>
+              {item.ingredients && (
+                <span
+                  className={`mt-1 block text-sm font-normal leading-relaxed text-muted-foreground first-letter:uppercase ${
+                    open ? "" : "line-clamp-2"
+                  }`}
+                >
+                  {item.ingredients}
+                </span>
+              )}
+              {!open && (
+                <span className="mt-2 block text-sm font-semibold text-char">
+                  A partir de {currencyFormatter.format(startingAt)}
+                </span>
+              )}
+              {!open && chosen.length > 0 && (
+                <span className="mt-1 block text-xs font-normal text-brick">
+                  {chosen.join(" · ")}
+                </span>
+              )}
+            </span>
+          </button>
+        </h3>
+      ) : (
+        <>
+          {image}
+          <div className="flex flex-1 flex-col p-4">
+            <h3 className="text-lg font-semibold text-char">{item.name}</h3>
+            {item.ingredients && (
+              <p className="mt-1 text-sm leading-relaxed text-muted-foreground first-letter:uppercase">
+                {item.ingredients}
+              </p>
+            )}
+            <div className="mt-auto pt-4">{addButton}</div>
+          </div>
+        </>
+      )}
 
-      <div className="flex flex-1 flex-col p-4">
-        <h3 className="text-lg font-semibold text-char">{item.name}</h3>
-        {item.ingredients && (
-          <p className="mt-1 text-sm leading-relaxed text-muted-foreground first-letter:uppercase">
-            {item.ingredients}
-          </p>
-        )}
-
-        <div className="mt-auto pt-4">
-          {prices && (
-            <div
-              role="radiogroup"
-              aria-label={`Tamanho de ${item.name}`}
-              className="grid grid-cols-2 gap-2"
-            >
-              {SIZES.map((option) => {
-                const selected = size === option;
-                return (
-                  <button
-                    key={option}
-                    type="button"
-                    role="radio"
-                    aria-checked={selected}
-                    onClick={() => setSize(option)}
-                    className={`rounded-sm border px-3 py-2 text-left transition-colors ${
-                      selected
-                        ? "border-brick bg-brick/10 text-brick"
-                        : "border-border text-char hover:border-brick/50"
-                    }`}
-                  >
-                    <span className="block text-xs">
-                      {option} · {SIZE_LABEL[option]}
-                    </span>
-                    <span className="block text-sm font-semibold">
-                      {currencyFormatter.format(priceFor(option))}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          )}
+      {open && (
+        <div id={panelId} className="space-y-3 border-t border-border p-4">
+          <div
+            role="radiogroup"
+            aria-label={`Tamanho de ${item.name}`}
+            className="grid grid-cols-2 gap-2"
+          >
+            {SIZES.map((option) => {
+              const selected = size === option;
+              return (
+                <button
+                  key={option}
+                  type="button"
+                  role="radio"
+                  aria-checked={selected}
+                  onClick={() => setSize(option)}
+                  className={`rounded-sm border px-3 py-2 text-left transition-colors ${
+                    selected
+                      ? "border-brick bg-brick/10 text-brick"
+                      : "border-border text-char hover:border-brick/50"
+                  }`}
+                >
+                  <span className="block text-xs">
+                    {option} · {SIZE_LABEL[option]}
+                  </span>
+                  <span className="block text-sm font-semibold">
+                    {currencyFormatter.format(priceFor(option))}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
 
           {isPizza && (
-            <div className="mt-3 space-y-2">
+            <div className="space-y-2">
               <div className="flex flex-wrap gap-2">
                 <button
                   type="button"
@@ -190,7 +286,7 @@ export function ProductCard({ item, menu }: { item: MenuItem; menu: MenuItem[] }
                         </option>
                       ))}
                   </select>
-                  {half && (
+                  {half?.ingredients && (
                     <p className="text-xs text-muted-foreground first-letter:uppercase">
                       {half.name}: {half.ingredients}
                     </p>
@@ -211,20 +307,9 @@ export function ProductCard({ item, menu }: { item: MenuItem; menu: MenuItem[] }
             </div>
           )}
 
-          <button
-            type="button"
-            onClick={handleAdd}
-            disabled={waitingHalf}
-            className={`${prices ? "mt-3" : ""} w-full rounded-sm bg-brick px-4 py-3 text-sm font-medium text-background transition-colors hover:bg-brick-dark disabled:cursor-not-allowed disabled:opacity-50`}
-          >
-            {added
-              ? "Adicionado!"
-              : waitingHalf
-                ? "Escolha o segundo sabor"
-                : `Adicionar · ${currencyFormatter.format(price)}`}
-          </button>
+          {addButton}
         </div>
-      </div>
+      )}
     </div>
   );
 }
