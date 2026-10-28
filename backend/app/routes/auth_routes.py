@@ -1,6 +1,7 @@
 
 from flask import Blueprint
 from app.controllers import auth_controller
+from app.controllers import pedido_controller
 
 auth_bp = Blueprint('auth_bp', __name__)
 
@@ -38,3 +39,8 @@ def usuario_logado():
 @auth_bp.route('/api/v1/logout', methods=['POST'])
 def logout():
     return auth_controller.logout_controller()
+
+
+@auth_bp.route('/api/v1/meus-pedidos', methods=['GET'])
+def meus_pedidos():
+    return pedido_controller.listar_meus_pedidos_controller()

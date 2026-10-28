@@ -29,7 +29,7 @@ def criar_pedido(conn, pedido: dict):
             (id_cliente, id_funcionario, id_status, id_endereco,
              forma_pagamento, taxa_entrega, valor_total,
              tipo_entrega, nome_contato, telefone_contato)
-            VALUES (%s, 1, %s, %s, %s, %s, %s, %s, %s, %s)
+            VALUES (%s, NULL, %s, %s, %s, %s, %s, %s, %s, %s)
             RETURNING id_pedido, data_hora_pedido""",
             (
                 pedido['id_cliente'],
@@ -48,16 +48,26 @@ def criar_pedido(conn, pedido: dict):
 
 def criar_itens_pedido(conn, id_pedido: int, itens: list):
     with conn.cursor() as cursor:
-        cursor.executemany(
-            """INSERT INTO item_pedido
-            (id_pedido, id_produto, quantidade, preco_unitario, subtotal, observacao)
-            VALUES (%s, %s, %s, %s, %s, %s)""",
-            [(id_pedido, item['id_produto'], item['quantidade'], item['preco_unitario'],
-              item['subtotal'], item['observacao']) for item in itens]
-        )
+        for item in itens:
+            cursor.execute(
+                """INSERT INTO item_pedido
+                (id_pedido, id_produto, quantidade, preco_unitario, subtotal, observacao)
+                VALUES (%s, %s, %s, %s, %s, %s) RETURNING id_item_pedido""",
+                (id_pedido, item['id_produto'], item['quantidade'], item['preco_unitario'],
+                 item['subtotal'], item['observacao']),
+            )
+            id_item = cursor.fetchone()[0]
+            if item.get('bordas'):
+                cursor.executemany(
+                    """INSERT INTO item_pedido_borda
+                    (id_item_pedido, id_produto, quantidade, preco_unitario, subtotal)
+                    VALUES (%s, %s, %s, %s, %s)""",
+                    [(id_item, b['id_produto'], b['quantidade'], b['preco_unitario'], b['subtotal'])
+                     for b in item['bordas']],
+                )
 
 
-def listar_pedidos(conn):
+def listar_pedidos(conn, id_cliente=None):
     with conn.cursor() as cursor:
         cursor.execute(
             """
@@ -87,8 +97,9 @@ def listar_pedidos(conn):
             JOIN status s ON s.id_status = p.id_status
             JOIN cliente c ON c.id_cliente = p.id_cliente
             LEFT JOIN endereco e ON e.id_endereco = p.id_endereco
+            WHERE (%s::integer IS NULL OR p.id_cliente = %s)
             ORDER BY p.data_hora_pedido DESC
-            """
+            """, (id_cliente, id_cliente),
         )
         pedidos = cursor.fetchall()
 
@@ -101,13 +112,32 @@ def listar_pedidos(conn):
                 ip.quantidade,
                 ip.preco_unitario,
                 ip.subtotal,
-                ip.observacao
+                ip.observacao,
+                ip.id_item_pedido
             FROM item_pedido ip
             JOIN produto pr ON pr.id_produto = ip.id_produto
+            JOIN pedido p ON p.id_pedido = ip.id_pedido
+            WHERE (%s::integer IS NULL OR p.id_cliente = %s)
             ORDER BY ip.id_pedido, ip.id_item_pedido
-            """
+            """, (id_cliente, id_cliente),
         )
         itens = cursor.fetchall()
+        cursor.execute(
+            """SELECT b.id_item_pedido, b.id_produto, pr.nome, b.quantidade,
+                      b.preco_unitario, b.subtotal
+            FROM item_pedido_borda b
+            JOIN produto pr ON pr.id_produto = b.id_produto
+            JOIN item_pedido ip ON ip.id_item_pedido = b.id_item_pedido
+            JOIN pedido p ON p.id_pedido = ip.id_pedido
+            WHERE (%s::integer IS NULL OR p.id_cliente = %s)
+            ORDER BY b.id_item_pedido, b.id_produto""", (id_cliente, id_cliente),
+        )
+        bordas_por_item = {}
+        for b in cursor.fetchall():
+            bordas_por_item.setdefault(b[0], []).append({
+                'id_produto': b[1], 'produto': b[2], 'quantidade': b[3],
+                'preco_unitario': str(b[4]), 'subtotal': str(b[5]),
+            })
 
     itens_por_pedido = {}
     for item in itens:
@@ -118,6 +148,7 @@ def listar_pedidos(conn):
             "preco_unitario": str(item[4]),
             "subtotal": str(item[5]),
             "observacao": item[6],
+            "bordas": bordas_por_item.get(item[7], []),
         })
 
     resultado = []

@@ -1,315 +1,159 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { X, Minus, Plus } from "lucide-react";
 import { MenuItem, Size } from "@/types/product";
 import { SIZE_LABEL, precoMeioAMeio } from "@/lib/data/products";
 import { useCart } from "@/hooks/use-cart";
 
-const currencyFormatter = new Intl.NumberFormat("pt-BR", {
-  style: "currency",
-  currency: "BRL",
-});
-
-const SIZES: Size[] = ["P", "G"];
-
-function hash(text: string) {
-  let h = 0;
-  for (const char of text) h = (h * 31 + char.charCodeAt(0)) >>> 0;
-  return h.toString(36);
-}
-
-function chipClass(active: boolean) {
-  return `rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
-    active
-      ? "border-brick bg-brick/10 text-brick"
-      : "border-border text-char hover:border-brick/50"
-  }`;
-}
+const money = (value: number) => value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
 interface ProductCardProps {
   item: MenuItem;
   menu: MenuItem[];
-  /** Itens com tamanho (pizzas, bordas) abrem as opções quando expandidos. */
   expanded: boolean;
   onToggle: () => void;
 }
 
 export function ProductCard({ item, menu, expanded, onToggle }: ProductCardProps) {
   const { addItem } = useCart();
-  // O estado fica no próprio card: recolher ou abrir outro item não perde as escolhas.
+  const dialog = useRef<HTMLDialogElement>(null);
   const [size, setSize] = useState<Size>("G");
-  const [added, setAdded] = useState(false);
-  const [halfMode, setHalfMode] = useState(false);
   const [halfId, setHalfId] = useState("");
-  const [showNote, setShowNote] = useState(false);
+  const [borderId, setBorderId] = useState("");
   const [note, setNote] = useState("");
-
-  const prices = item.prices;
+  const [quantity, setQuantity] = useState(1);
   const isPizza = item.category === "salgada" || item.category === "doce";
-  const half = halfMode ? menu.find((m) => m.id === halfId) : undefined;
-  const waitingHalf = halfMode && !half;
+  const half = menu.find(m => m.id === halfId && (m.category === "salgada" || m.category === "doce"));
+  const border = menu.find(m => m.id === borderId);
+  const pizzaPrice = item.prices
+    ? half ? precoMeioAMeio(item, half, size) : item.prices[size]
+    : item.price ?? 0;
+  const borderPrice = border?.prices?.[size] ?? 0;
+  const price = pizzaPrice + borderPrice;
+  const startingAt = item.prices ? Math.min(item.prices.P, item.prices.G) : item.price ?? 0;
 
-  const expandable = Boolean(prices);
-  const open = expandable && expanded;
-  const panelId = `opcoes-${item.id}`;
-
-  const priceFor = (s: Size) =>
-    prices ? (half ? precoMeioAMeio(item, half, s) : prices[s]) : (item.price ?? 0);
-  const price = prices ? priceFor(size) : (item.price ?? 0);
-  const startingAt = prices ? Math.min(prices.P, prices.G) : 0;
-
-  const chosen = [half && `½ ${half.name}`, note.trim() && "com observação"].filter(Boolean);
+  useEffect(() => {
+    if (!expanded) return;
+    const node = dialog.current;
+    const overflow = document.body.style.overflow;
+    node?.showModal();
+    document.body.style.overflow = "hidden";
+    return () => {
+      node?.close();
+      document.body.style.overflow = overflow;
+    };
+  }, [expanded]);
 
   function handleAdd() {
-    if (waitingHalf) return;
+    const billed = half && item.prices && (half.prices?.[size] ?? 0) > item.prices[size] ? half : item;
+    const productId = item.prices ? billed.productIds?.[size] : item.productId;
+    if (!productId || (border && !border.productIds?.[size])) return;
     const cleanNote = note.trim();
-
-    // No backend o meio a meio é cobrado pelo produto da metade mais cara;
-    // os dois sabores seguem na observação do item para a cozinha.
-    const billed =
-      half && prices && (half.prices?.[size] ?? 0) > prices[size] ? half : item;
-    const productId = prices ? billed.productIds?.[size] : item.productId;
-    if (productId === undefined) return;
-    const orderNote =
-      [half ? `Meio a meio: ${item.name} / ${half.name}` : "", cleanNote]
-        .filter(Boolean)
-        .join(" - ") || undefined;
-    const label =
-      item.category === "borda"
-        ? `Borda ${item.name}`
-        : half
-          ? `Meio a meio: ${item.name} / ${half.name}`
-          : item.name;
-
-    const idParts = [half ? `${item.id}+${half.id}` : item.id];
-    if (prices) idParts.push(size);
-    if (cleanNote) idParts.push(`obs${hash(cleanNote.toLowerCase())}`);
-
+    const label = half ? `Meio a meio: ${item.name} / ${half.name}` : item.name;
+    const orderNote = [half ? label : "", cleanNote].filter(Boolean).join(" - ") || undefined;
+    const id = [item.id, size, halfId, borderId, cleanNote].join(":");
     addItem({
-      id: idParts.join("-"),
-      category: item.category,
-      name: prices ? `${label} (${SIZE_LABEL[size]})` : label,
-      description: half
-        ? `½ ${item.name}: ${item.ingredients ?? ""}; ½ ${half.name}: ${half.ingredients ?? ""}`
-        : (item.ingredients ?? ""),
-      price,
-      image: item.image,
-      menuItemId: item.id,
-      size: prices ? size : undefined,
-      halfMenuItemId: half?.id,
-      note: cleanNote || undefined,
-      productId,
-      orderNote,
-    });
-
-    setAdded(true);
-    setTimeout(() => setAdded(false), 1500);
-    setNote("");
-    setShowNote(false);
-    setHalfMode(false);
-    setHalfId("");
+      id, category: item.category,
+      name: item.prices ? `${label} (${SIZE_LABEL[size]})` : label,
+      description: item.ingredients ?? "", price, image: item.image,
+      menuItemId: item.id, size: item.prices ? size : undefined,
+      productId, halfMenuItemId: half?.id, note: cleanNote || undefined, orderNote,
+      border: border ? { productId: border.productIds![size]!, name: border.name, price: borderPrice } : undefined,
+    }, quantity);
+    onToggle();
   }
 
-  const addButton = (
-    <button
-      type="button"
-      onClick={handleAdd}
-      disabled={waitingHalf}
-      className="w-full rounded-sm bg-brick px-4 py-3 text-sm font-medium text-background transition-colors hover:bg-brick-dark disabled:cursor-not-allowed disabled:opacity-50"
-    >
-      {added
-        ? "Adicionado!"
-        : waitingHalf
-          ? "Escolha o segundo sabor"
-          : `Adicionar · ${currencyFormatter.format(price)}`}
-    </button>
-  );
-
-  const image = (
-    <span className="relative block h-32 w-full sm:h-36">
-      <Image
-        src={item.image}
-        alt={expandable ? "" : item.name}
-        fill
-        sizes="(min-width: 1280px) 25vw, (min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
-        className="object-cover"
-      />
-    </span>
-  );
-
   return (
-    <div
-      onKeyDown={(e) => {
-        if (e.key === "Escape" && open) onToggle();
-      }}
-      className={`relative flex flex-col overflow-hidden rounded-lg border bg-background shadow-sm transition-shadow ${
-        open
-          ? "border-brick shadow-md after:pointer-events-none after:absolute after:inset-0 after:rounded-lg after:ring-1 after:ring-inset after:ring-brick"
-          : "border-border"
-      }`}
-    >
-      {expandable ? (
-        <h3>
-          <button
-            type="button"
-            onClick={onToggle}
-            aria-expanded={open}
-            aria-controls={panelId}
-            className="block w-full text-left"
-          >
-            {image}
-            <span className="block p-4">
-              <span className="flex items-start justify-between gap-2">
-                <span className="text-lg font-semibold text-char">{item.name}</span>
-                <svg
-                  aria-hidden="true"
-                  viewBox="0 0 20 20"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  className={`mt-1 h-5 w-5 shrink-0 text-muted-foreground transition-transform ${
-                    open ? "rotate-180" : ""
-                  }`}
-                >
-                  <path d="M5 8l5 5 5-5" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </span>
-              {item.ingredients && (
-                <span
-                  className={`mt-1 block text-sm font-normal leading-relaxed text-muted-foreground first-letter:uppercase ${
-                    open ? "" : "line-clamp-2"
-                  }`}
-                >
-                  {item.ingredients}
-                </span>
-              )}
-              {!open && (
-                <span className="mt-2 block text-sm font-semibold text-char">
-                  A partir de {currencyFormatter.format(startingAt)}
-                </span>
-              )}
-              {!open && chosen.length > 0 && (
-                <span className="mt-1 block text-xs font-normal text-brick">
-                  {chosen.join(" · ")}
-                </span>
-              )}
-            </span>
-          </button>
-        </h3>
-      ) : (
-        <>
-          {image}
-          <div className="flex flex-1 flex-col p-4">
-            <h3 className="text-lg font-semibold text-char">{item.name}</h3>
-            {item.ingredients && (
-              <p className="mt-1 text-sm leading-relaxed text-muted-foreground first-letter:uppercase">
-                {item.ingredients}
-              </p>
-            )}
-            <div className="mt-auto pt-4">{addButton}</div>
-          </div>
-        </>
-      )}
+    <>
+      <button type="button" onClick={onToggle} aria-haspopup="dialog" aria-expanded={expanded}
+        className="group flex h-[330px] w-full flex-col overflow-hidden rounded-xl border border-border bg-background text-left shadow-sm transition hover:border-brick/50 hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-brick sm:h-[350px]">
+        <span className="relative block h-40 w-full shrink-0 sm:h-44">
+          <Image src={item.image} alt={item.name} fill sizes="(min-width: 1280px) 25vw, (min-width: 640px) 50vw, 100vw" className="object-cover transition-transform group-hover:scale-105" />
+        </span>
+        <span className="flex min-h-0 flex-1 flex-col p-4">
+          <span className="line-clamp-1 text-lg font-semibold text-char">{item.name}</span>
+          <span className="mt-1 line-clamp-2 min-h-10 text-sm leading-5 text-muted-foreground first-letter:uppercase">{item.ingredients || "Confira as opções deste produto."}</span>
+          <span className="mt-auto flex items-center justify-between gap-2 pt-3 text-sm font-semibold text-char">
+            <span>{item.prices ? "A partir de " : ""}{money(startingAt)}</span>
+            <Plus className="h-5 w-5 text-brick" aria-hidden="true" />
+          </span>
+        </span>
+      </button>
 
-      {open && (
-        <div id={panelId} className="space-y-3 border-t border-border p-4">
-          <div
-            role="radiogroup"
-            aria-label={`Tamanho de ${item.name}`}
-            className="grid grid-cols-2 gap-2"
-          >
-            {SIZES.map((option) => {
-              const selected = size === option;
-              return (
-                <button
-                  key={option}
-                  type="button"
-                  role="radio"
-                  aria-checked={selected}
-                  onClick={() => setSize(option)}
-                  className={`rounded-sm border px-3 py-2 text-left transition-colors ${
-                    selected
-                      ? "border-brick bg-brick/10 text-brick"
-                      : "border-border text-char hover:border-brick/50"
-                  }`}
-                >
-                  <span className="block text-xs">
-                    {option} · {SIZE_LABEL[option]}
-                  </span>
-                  <span className="block text-sm font-semibold">
-                    {currencyFormatter.format(priceFor(option))}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-
-          {isPizza && (
-            <div className="space-y-2">
-              <div className="flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  aria-pressed={halfMode}
-                  onClick={() => {
-                    setHalfMode((value) => !value);
-                    setHalfId("");
-                  }}
-                  className={chipClass(halfMode)}
-                >
-                  Meio a meio
-                </button>
-                <button
-                  type="button"
-                  aria-pressed={showNote}
-                  onClick={() => setShowNote((value) => !value)}
-                  className={chipClass(showNote || note.trim() !== "")}
-                >
-                  Observação
-                </button>
-              </div>
-
-              {halfMode && (
-                <>
-                  <select
-                    value={halfId}
-                    onChange={(e) => setHalfId(e.target.value)}
-                    aria-label="Segundo sabor"
-                    className="w-full rounded-sm border border-border bg-background px-3 py-2 text-sm text-char outline-none focus:border-brick"
-                  >
-                    <option value="">Escolha o segundo sabor</option>
-                    {menu
-                      .filter((m) => m.category === item.category && m.id !== item.id)
-                      .map((m) => (
-                        <option key={m.id} value={m.id}>
-                          {m.name}
-                        </option>
-                      ))}
-                  </select>
-                  {half?.ingredients && (
-                    <p className="text-xs text-muted-foreground first-letter:uppercase">
-                      {half.name}: {half.ingredients}
-                    </p>
-                  )}
-                </>
-              )}
-
-              {showNote && (
-                <input
-                  value={note}
-                  maxLength={80}
-                  onChange={(e) => setNote(e.target.value)}
-                  placeholder="Ex.: sem cebola, sem azeitona"
-                  aria-label="Observação do item"
-                  className="w-full rounded-sm border border-border px-3 py-2 text-sm outline-none focus:border-brick"
-                />
-              )}
+      {expanded && (
+        <dialog ref={dialog} aria-labelledby={`titulo-${item.id}`} onCancel={e => { e.preventDefault(); onToggle(); }}
+          onClick={e => { if (e.target === e.currentTarget) onToggle(); }}
+          className="m-auto max-h-[calc(100dvh-1rem)] w-[calc(100%-1rem)] max-w-4xl overflow-hidden rounded-2xl bg-background p-0 text-char shadow-2xl backdrop:bg-char/60 sm:max-h-[85dvh]">
+          <div className="flex max-h-[calc(100dvh-1rem)] flex-col sm:max-h-[85dvh] sm:flex-row">
+            <div className="relative hidden w-[43%] shrink-0 bg-muted sm:block">
+              <Image src={item.image} alt={item.name} fill sizes="420px" className="object-cover" />
             </div>
-          )}
-
-          {addButton}
-        </div>
+            <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+              <header className="flex shrink-0 items-center justify-between gap-3 border-b border-border px-5 py-4">
+                <h2 id={`titulo-${item.id}`} className="text-lg font-semibold">Monte seu pedido</h2>
+                <button type="button" onClick={onToggle} aria-label="Fechar detalhes do produto" className="rounded-full bg-muted p-2 hover:bg-border"><X size={20} /></button>
+              </header>
+              <div className="min-h-0 space-y-5 overflow-y-auto p-5">
+                <div className="relative h-40 overflow-hidden rounded-lg sm:hidden"><Image src={item.image} alt="" fill sizes="(max-width: 639px) 100vw, 1px" className="object-cover" /></div>
+                <div>
+                  <h3 className="font-display text-2xl font-semibold">{item.name}</h3>
+                  <p className="mt-2 text-sm text-muted-foreground first-letter:uppercase">{item.ingredients}</p>
+                </div>
+                {item.prices && (
+                  <fieldset>
+                    <legend className="mb-2 font-semibold">Tamanho</legend>
+                    <div className="grid grid-cols-2 gap-2">
+                      {(["P", "G"] as Size[]).map(option => (
+                        <label key={option} className={`cursor-pointer rounded-lg border p-3 text-sm ${size === option ? "border-brick bg-brick/10" : "border-border"}`}>
+                          <input type="radio" name={`tamanho-${item.id}`} value={option} checked={size === option} onChange={() => setSize(option)} className="mr-2 accent-brick" />
+                          {SIZE_LABEL[option]}<span className="mt-1 block font-semibold">{money(item.prices![option])}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </fieldset>
+                )}
+                {isPizza && (
+                  <>
+                    <label className="block text-sm font-semibold">Segundo sabor (opcional)
+                      <select value={halfId} onChange={e => setHalfId(e.target.value)} className="mt-2 w-full rounded-lg border border-border bg-background p-3 font-normal">
+                        <option value="">Um sabor: {item.name}</option>
+                        {(["salgada", "doce"] as const).map(category => (
+                          <optgroup key={category} label={category === "salgada" ? "Pizzas salgadas" : "Pizzas doces"}>
+                            {menu.filter(m => m.category === category && m.id !== item.id).map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
+                          </optgroup>
+                        ))}
+                      </select>
+                      <span className="mt-1 block text-xs font-normal text-muted-foreground">Combine sabores doces e salgados. Vale o preço do sabor de maior valor.</span>
+                    </label>
+                    <label className="block text-sm font-semibold">Borda (opcional)
+                      <select value={borderId} onChange={e => setBorderId(e.target.value)} className="mt-2 w-full rounded-lg border border-border bg-background p-3 font-normal">
+                        <option value="">Sem borda recheada</option>
+                        {menu.filter(m => m.category === "borda" && m.productIds?.[size]).map(m => <option key={m.id} value={m.id}>{m.name} · + {money(m.prices?.[size] ?? 0)}</option>)}
+                      </select>
+                      <span className="mt-1 block text-xs font-normal text-muted-foreground">O tamanho da borda acompanha o da pizza.</span>
+                    </label>
+                  </>
+                )}
+                <label className="block text-sm font-semibold">Observação
+                  <textarea value={note} maxLength={80} onChange={e => setNote(e.target.value)} placeholder="Ex.: sem cebola" rows={2} className="mt-2 w-full resize-none rounded-lg border border-border bg-background p-3 font-normal" />
+                </label>
+              </div>
+              <footer className="flex shrink-0 items-center gap-3 border-t border-border bg-background p-4">
+                <div className="flex items-center gap-2 rounded-lg bg-muted p-2">
+                  <button type="button" aria-label="Diminuir quantidade" disabled={quantity <= 1} onClick={() => setQuantity(q => q - 1)} className="p-1 disabled:opacity-30"><Minus size={18} /></button>
+                  <span className="min-w-5 text-center text-sm">{quantity}</span>
+                  <button type="button" aria-label="Aumentar quantidade" disabled={quantity >= 99} onClick={() => setQuantity(q => q + 1)} className="p-1 disabled:opacity-30"><Plus size={18} /></button>
+                </div>
+                <button type="button" onClick={handleAdd} className="flex min-w-0 flex-1 flex-wrap items-center justify-between gap-1 rounded-lg bg-brick px-4 py-3 text-sm font-semibold text-background hover:bg-brick-dark">
+                  <span>Adicionar</span><span>{money(price * quantity)}</span>
+                </button>
+              </footer>
+            </div>
+          </div>
+        </dialog>
       )}
-    </div>
+    </>
   );
 }

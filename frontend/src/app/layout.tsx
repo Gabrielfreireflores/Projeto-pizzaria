@@ -3,6 +3,7 @@ import { Fraunces, Public_Sans } from "next/font/google";
 import "./globals.css";
 import { CartProvider } from "@/hooks/use-cart";
 import { AuthProvider } from "@/hooks/use-auth";
+import { MenuSearchProvider } from "@/hooks/use-menu-search";
 
 const fraunces = Fraunces({
   subsets: ["latin"],
@@ -31,7 +32,7 @@ export default function RootLayout({
     <html lang="pt-BR" className={`${fraunces.variable} ${publicSans.variable}`}>
       <body>
         <AuthProvider>
-          <CartProvider>{children}</CartProvider>
+          <CartProvider><MenuSearchProvider>{children}</MenuSearchProvider></CartProvider>
         </AuthProvider>
       </body>
     </html>

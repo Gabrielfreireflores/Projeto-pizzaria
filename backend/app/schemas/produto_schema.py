@@ -44,6 +44,11 @@ def validar_produto(dados):
     }
     if type(produto['disponivel']) is not bool:
         raise ValueError('disponivel deve ser booleano.')
+    if 'descricao' in dados:
+        descricao = dados['descricao']
+        if descricao is not None and not isinstance(descricao, str):
+            raise ValueError('descricao deve ser um texto.')
+        produto['descricao'] = (descricao.strip() or None) if descricao is not None else None
     ingredientes = dados.get('ingredientes', [])
     if not isinstance(ingredientes, list):
         raise ValueError('Ingredientes deve ser uma lista')

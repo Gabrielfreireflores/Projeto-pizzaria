@@ -19,6 +19,7 @@ export interface MenuItem {
 
 /** Linha do carrinho: um item do cardápio já com o tamanho escolhido. */
 export interface Product {
+  border?: { productId: number; name: string; price: number };
   id: string;
   category: ProductCategory;
   name: string;

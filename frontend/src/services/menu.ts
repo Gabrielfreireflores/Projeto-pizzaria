@@ -59,7 +59,7 @@ export async function fetchMenu(): Promise<MenuItem[]> {
           id,
           category,
           name,
-          image: FOTOS[id] ?? fotoValida(produto.foto) ?? SEM_FOTO,
+          image: fotoValida(produto.foto) ?? FOTOS[id] ?? SEM_FOTO,
           order: produto.id_produto,
         };
         items.set(id, item);

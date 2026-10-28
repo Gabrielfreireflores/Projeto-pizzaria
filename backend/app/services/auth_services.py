@@ -107,7 +107,14 @@ def autenticar_usuario(email, senha):
     if usuario is None:
         raise ValueError("E-mail ou senha inválidos.")
 
-    if not check_password_hash(usuario[3], senha):
+    try:
+        senha_valida = isinstance(usuario[3], str) and check_password_hash(usuario[3], senha)
+    except (ValueError, TypeError):
+        # Seeds antigos podem conter um marcador em vez de um hash suportado.
+        # Não autentica e não expõe detalhes do formato da senha ao cliente.
+        senha_valida = False
+
+    if not senha_valida:
         raise ValueError("E-mail ou senha inválidos.")
 
     if usuario[2] is False:

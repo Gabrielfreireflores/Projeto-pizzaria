@@ -56,6 +56,37 @@ def test_preco_zero_e_normalizacao(payload):
     assert str(produto['preco']) == '0.00'
     assert produto['nome'] == 'Pizza'
 
+
+def test_descricao_opcional_e_normalizada(payload):
+    payload['descricao'] = '  Frango e queijo  '
+    assert validar_produto(payload)['descricao'] == 'Frango e queijo'
+    payload['descricao'] = ' '
+    assert validar_produto(payload)['descricao'] is None
+    payload['descricao'] = 123
+    with pytest.raises(ValueError, match='descricao'):
+        validar_produto(payload)
+
+
+@pytest.mark.parametrize('metodo,rota,servico', [
+    ('post', '/api/produtos', 'criar_produto'),
+    ('put', '/api/v1/produtos/10', 'atualizar_produto'),
+])
+def test_duplicidade_http_retorna_409(monkeypatch, payload, metodo, rota, servico):
+    from app.services import produto_services
+
+    def duplicado(*args):
+        raise produto_services.ProdutoDuplicado('Já existe produto com esse nome e tamanho.')
+
+    monkeypatch.setattr(produto_services, servico, duplicado)
+    app = create_app()
+    app.config.update(TESTING=True, SECRET_KEY='somente-testes')
+    client = app.test_client()
+    with client.session_transaction() as sess:
+        sess['id_usuario'] = 2
+    resposta = getattr(client, metodo)(rota, json=payload)
+    assert resposta.status_code == 409
+    assert resposta.json == {'erro': 'Já existe produto com esse nome e tamanho.'}
+
 @pytest.mark.parametrize('sem_ingredientes', [[], None])
 def test_ingredientes_sao_opcionais(payload, sem_ingredientes):
     # Bebidas não têm ingrediente: lista vazia ou campo ausente é aceito.

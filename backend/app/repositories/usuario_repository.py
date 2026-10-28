@@ -1,4 +1,5 @@
 from app.database import get_connection
+import psycopg
 from app.exceptions.custom_exceptions import ChaveUnicaVioladaError, ErroBancoDadosError, SintaxeSQLError
 from contextlib import contextmanager
 

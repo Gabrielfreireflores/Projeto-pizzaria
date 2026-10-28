@@ -15,14 +15,14 @@ def logout_controller():
 def usuario_logado_controller():
     id_usuario = session.get("id_usuario")
 
-    if not id_usuario:
+    if type(id_usuario) is not int or id_usuario <= 0:
         return jsonify({
             "erro": "Usuário não autenticado."
         }), 401
 
     usuario = buscar_usuario_por_id(id_usuario)
 
-    if usuario is None:
+    if usuario is None or not usuario[2]:
         session.clear()
         return jsonify({
             "erro": "Usuário não encontrado."

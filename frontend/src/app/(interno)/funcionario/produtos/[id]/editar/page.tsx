@@ -18,6 +18,7 @@ type ProdutoApi = {
   preco: string;
   disponivel: boolean;
   foto?: string | null;
+  descricao?: string | null;
   categoria: { id_categoria: number; nome: string };
   ingredientes: { id_ingrediente: number; quantidade_necessaria: string }[];
 };
@@ -57,6 +58,7 @@ export default function EditarProdutoPage() {
   const [erroCarga, setErroCarga] = useState<string | null>(null);
 
   const [nome, setNome] = useState("");
+  const [descricao, setDescricao] = useState("");
   const [tamanho, setTamanho] = useState("");
   const [preco, setPreco] = useState("");
   const [idCategoria, setIdCategoria] = useState("");
@@ -105,6 +107,7 @@ export default function EditarProdutoPage() {
         setFoto(null);
 
         setNome(produto.nome);
+        setDescricao(produto.descricao ?? "");
         setTamanho(produto.tamanho);
         setPreco(precoParaTela(produto.preco));
         setIdCategoria(String(produto.categoria.id_categoria));
@@ -197,16 +200,13 @@ export default function EditarProdutoPage() {
         }
         itens.push({ id_ingrediente: Number(l.id), quantidade_necessaria: qtd });
       }
-      if (itens.length === 0) {
-        setErro("Adicione ao menos um ingrediente.");
-        return;
-      }
     }
 
     setEnviando(true);
     try {
       await api.atualizarProduto(Number(id), {
         nome: nome.trim(),
+        descricao: descricao.trim(),
         tamanho: tamanho.trim(),
         preco: precoLimpo,
         id_categoria: Number(idCategoria),
@@ -243,7 +243,7 @@ export default function EditarProdutoPage() {
   }
 
   return (
-    <div className="flex justify-center">
+    <div className="flex min-w-0 justify-center">
       <div className="w-full max-w-2xl">
         <header className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
           <div className="flex-1">
@@ -272,6 +272,7 @@ export default function EditarProdutoPage() {
             <Campo label="Nome do produto" htmlFor="nome" className="sm:col-span-2">
               <input
                 id="nome"
+                maxLength={120}
                 value={nome}
                 onChange={(e) => setNome(e.target.value)}
                 required
@@ -282,6 +283,7 @@ export default function EditarProdutoPage() {
             <Campo label="Tamanho" htmlFor="tamanho">
               <input
                 id="tamanho"
+                maxLength={30}
                 list="tamanhos"
                 value={tamanho}
                 onChange={(e) => setTamanho(e.target.value)}
@@ -291,7 +293,9 @@ export default function EditarProdutoPage() {
               <datalist id="tamanhos">
                 <option value="Pequena" />
                 <option value="Grande" />
+                <option value="Único" />
               </datalist>
+              {categoriaAtual && ["Pizzas Salgadas", "Pizzas Doces", "Bordas"].includes(categoriaAtual.nome) && <p className="mt-1 text-xs text-muted-foreground">Para aparecer agrupado no cardápio, cadastre Pequena e Grande com o mesmo nome.</p>}
             </Campo>
 
             <Campo label="Preço" htmlFor="preco">
@@ -353,7 +357,7 @@ export default function EditarProdutoPage() {
             ) : (
               <div className="sm:col-span-2">
                 <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  Ingredientes
+                  Ingredientes (opcionais)
                 </p>
 
                 <div className="space-y-2">
@@ -363,12 +367,12 @@ export default function EditarProdutoPage() {
                     )?.unidade_medida;
 
                     return (
-                      <div key={i} className="flex items-center gap-2">
+                      <div key={i} className="grid grid-cols-[minmax(0,1fr)_4rem_2.25rem] items-center gap-2 sm:flex">
                         <select
                           value={linha.id}
                           onChange={(e) => atualizarLinha(i, { id: e.target.value })}
                           aria-label="Ingrediente"
-                          className={`${campoBase} min-w-0 flex-1`}
+                          className={`${campoBase} col-span-3 min-w-0 w-full sm:w-auto sm:flex-1`}
                         >
                           <option value="">Selecione...</option>
                           {ingredientes.map((ing) => (
@@ -390,7 +394,7 @@ export default function EditarProdutoPage() {
                           inputMode="decimal"
                           placeholder="Qtd."
                           aria-label="Quantidade"
-                          className={`${campoBase} w-28 shrink-0`}
+                          className={`${campoBase} w-full min-w-0 sm:w-28 sm:shrink-0`}
                         />
 
                         <span className="w-16 shrink-0 truncate text-sm text-muted-foreground">
@@ -418,11 +422,15 @@ export default function EditarProdutoPage() {
                 </button>
 
                 <p className="mt-2 text-xs text-muted-foreground">
-                  Informe a quantidade na unidade do ingrediente. Ex.: 150 g de um ingrediente em
+                  A receita é opcional. Quando informada, use a unidade do ingrediente. Ex.: 150 g de um ingrediente em
                   kg é 0,150.
                 </p>
               </div>
             )}
+
+            <Campo label="Descrição (opcional)" htmlFor="descricao" className="sm:col-span-2">
+              <textarea id="descricao" value={descricao} onChange={e => setDescricao(e.target.value)} rows={3} className={inputCls} placeholder="Descreva os ingredientes e o produto para o cardápio." />
+            </Campo>
 
             <div className="sm:col-span-2">
               <label

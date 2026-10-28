@@ -48,6 +48,19 @@ def listar_pedidos_controller():
         return jsonify({"erro": "Não foi possível listar os pedidos."}), 500
 
 
+def listar_meus_pedidos_controller():
+    id_usuario = session.get('id_usuario')
+    if type(id_usuario) is not int or id_usuario <= 0:
+        return jsonify({'erro': 'Faça login para acompanhar seus pedidos.'}), 401
+    try:
+        return jsonify(pedido_services.listar_meus_pedidos(id_usuario)), 200
+    except PermissionError as e:
+        return jsonify({'erro': str(e)}), 403
+    except (psycopg.Error, RuntimeError):
+        current_app.logger.exception('Falha ao consultar pedidos do cliente.')
+        return jsonify({'erro': 'Não foi possível consultar seus pedidos.'}), 503
+
+
 def aceitar_pedido_controller(id_pedido):
     id_usuario = session.get("id_usuario")
 

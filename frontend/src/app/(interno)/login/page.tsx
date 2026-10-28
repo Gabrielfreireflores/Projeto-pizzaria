@@ -73,7 +73,7 @@ export default function LoginPage() {
     setEnviando(true);
     try {
       const usuario = await login(email, senha);
-      router.push(ehFuncionario(usuario) ? "/funcionario"  : "/");
+      router.push(ehFuncionario(usuario) ? "/funcionario" : "/meus-pedidos");
     } catch (err) {
       setErro(err instanceof Error ? err.message : "Não foi possível entrar.");
     } finally {

@@ -1,10 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { LogOut, User } from "lucide-react";
 import { ProdutosProvider } from "@/hooks/use-produtos";
 import { FuncionariosProvider } from "@/hooks/use-funcionarios";
+import { useAuth } from "@/hooks/use-auth";
+import { RequerFuncionario } from "@/components/shared/requer-funcionario";
 
 const menu = [
   { href: "/funcionario", label: "Pedidos" },
@@ -25,17 +27,24 @@ export default function FuncionarioLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const { logout } = useAuth();
+
+  async function sair() {
+    await logout();
+    router.replace("/login");
+  }
 
   return (
-    <ProdutosProvider>
+    <RequerFuncionario><ProdutosProvider>
       <FuncionariosProvider>
         <main className="min-h-screen bg-background text-char">
-          <div className="flex min-h-screen">
+          <div className="flex min-h-dvh flex-col lg:h-dvh lg:flex-row lg:overflow-hidden">
 
             {/* SIDEBAR */}
-            <aside className="flex h-screen w-64 flex-col border-r border-border bg-muted/40 px-5 py-6">
+            <aside className="flex w-full shrink-0 flex-col border-b border-border bg-muted/40 px-4 py-4 lg:h-dvh lg:w-64 lg:border-b-0 lg:border-r lg:px-5 lg:py-6">
               <div className="border-b border-border pb-5">
-                <Link href="/" className="block">
+                <div className="block select-none">
                   
                   {/* Logo + nome */}
                   <div className="flex items-center gap-3">
@@ -57,18 +66,18 @@ export default function FuncionarioLayout({
                     Área do funcionário
                   </p>
 
-                </Link>
+                </div>
               </div>
 
               {/* Menu com scroll próprio, caso cresça */}
-              <nav className="mt-5 flex-1 space-y-1 overflow-y-auto">
+              <nav aria-label="Área do funcionário" className="mt-4 flex gap-1 overflow-x-auto lg:mt-5 lg:block lg:flex-1 lg:space-y-1 lg:overflow-y-auto">
                 {menu.map((item) => {
                   const ativo = isAtivo(pathname, item.href);
                   return (
                     <Link
                       key={item.href}
                       href={item.href}
-                      className={`flex items-center rounded-lg px-4 py-3 text-sm font-medium transition ${
+                      className={`flex shrink-0 items-center rounded-lg px-4 py-3 text-sm font-medium transition ${
                         ativo
                           ? "bg-brick text-background shadow-sm"
                           : "text-char hover:bg-muted"
@@ -78,10 +87,11 @@ export default function FuncionarioLayout({
                     </Link>
                   );
                 })}
+                <button type="button" onClick={sair} className="ml-auto px-3 text-sm text-brick lg:hidden">Sair</button>
               </nav>
 
               {/* Rodapé: usuário + sair, estilo ERP */}
-              <div className="mt-4 shrink-0 border-t border-border pt-4">
+              <div className="mt-4 hidden shrink-0 border-t border-border pt-4 lg:block">
                 <div className="flex items-center gap-3 rounded-xl bg-background p-3 shadow-sm">
                   <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brick/10 text-brick">
                     <User size={18} />
@@ -96,24 +106,26 @@ export default function FuncionarioLayout({
                     </p>
                   </div>
 
-                  <Link
-                    href="/login"
+                  <button
+                    type="button"
+                    onClick={sair}
+                    aria-label="Sair da conta"
                     title="Sair"
                     className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-muted hover:text-brick"
                   >
                     <LogOut size={16} />
-                  </Link>
+                  </button>
                 </div>
               </div>
             </aside>
 
             {/* CONTEÚDO */}
-            <section className="flex-1 overflow-y-auto px-6 py-8 sm:px-8 lg:px-12">
+            <section className="min-w-0 flex-1 overflow-x-hidden px-4 py-6 sm:px-6 lg:min-h-0 lg:overflow-y-auto lg:px-8 xl:px-12">
               {children}
             </section>
           </div>
         </main>
       </FuncionariosProvider>
-    </ProdutosProvider>
+    </ProdutosProvider></RequerFuncionario>
   );
 }
