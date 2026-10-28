@@ -38,7 +38,7 @@ def client(app):
 @pytest.fixture
 def dados_cliente():
     """
-    Gera dados únicos para evitar conflito de e-mail/CPF.
+    Gera um e-mail único para o cadastro simplificado.
     """
     identificador = uuid.uuid4().hex[:8]
 
@@ -46,7 +46,6 @@ def dados_cliente():
         "email": f"teste_{identificador}@email.com",
         "senha": "Senha@123",
         "nome": "Cliente Teste",
-        "cpf": f"123.{identificador[:3]}.{identificador[3:6]}-00",
         "telefone": "16999999999",
     }
 
@@ -225,7 +224,7 @@ def test_cadastro_cliente_cria_usuario_e_cliente(
 
     assert cliente[1] == id_usuario
     assert cliente[2] == dados_cliente["nome"]
-    assert cliente[3] == dados_cliente["cpf"]
+    assert cliente[3] is None
     assert cliente[4] == dados_cliente["telefone"]
 
 

@@ -23,7 +23,7 @@ def buscar_cliente_convidado(conn):
         return cursor.fetchone()
 
 
-def criar_cliente(conn, id_usuario: int, nome: str, cpf: str, telefone=None):
+def criar_cliente(conn, id_usuario: int, nome: str, cpf=None, telefone=None):
     with conn.cursor() as cursor:
         cursor.execute(
             """

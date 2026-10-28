@@ -1,4 +1,5 @@
-from flask import request, jsonify, session
+from flask import request, jsonify, session, current_app
+from werkzeug.exceptions import BadRequest, UnsupportedMediaType
 from app.repositories.usuario_repository import buscar_usuario_por_id
 
 from app.services import auth_services
@@ -76,17 +77,21 @@ def cadastrar_usuario_controller(perfil_padrao: str):
         }), 400
 
 def cadastrar_cliente_controller():
-    data = request.get_json() or {}
+    try:
+        data = request.get_json()
+    except (BadRequest, UnsupportedMediaType):
+        return jsonify({'erro': 'Envie um objeto JSON válido.'}), 400
+    if not isinstance(data, dict):
+        return jsonify({'erro': 'Envie um objeto JSON válido.'}), 400
 
     email = data.get("email", "")
     senha = data.get("senha", "")
     nome = data.get("nome", "")
-    cpf = data.get("cpf", "")
     telefone = data.get("telefone")
 
-    if not email or not senha or not nome or not cpf:
+    if not email or not senha or not nome or not telefone:
         return jsonify({
-            "erro": "E-mail, senha, nome e CPF são obrigatórios."
+            "erro": "Nome completo, e-mail, celular e senha são obrigatórios."
         }), 400
 
     try:
@@ -94,7 +99,6 @@ def cadastrar_cliente_controller():
             email=email,
             senha=senha,
             nome=nome,
-            cpf=cpf,
             telefone=telefone
         )
 
@@ -117,10 +121,9 @@ def cadastrar_cliente_controller():
             "erro": str(e)
         }), 400
 
-    except Exception as e:
-        return jsonify({
-            "erro": str(e)
-        }), 400
+    except Exception:
+        current_app.logger.exception('Falha ao cadastrar cliente.')
+        return jsonify({'erro': 'Não foi possível criar sua conta. Tente novamente.'}), 503
 
 
 def login_controller():

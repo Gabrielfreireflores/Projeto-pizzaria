@@ -1,5 +1,22 @@
 ## 🔐 Autenticação/Usuário - Cliente / Funcionário
 
+### Cadastro e consulta do cliente
+
+`POST /api/v1/clientes` recebe `nome` (nome e sobrenome, até 120 caracteres),
+`email` (formato válido, até 160 caracteres, trim e minúsculas), `telefone`
+(celular obrigatório, de 10 a 15 dígitos; aceita `+ ( ) . -` e espaços, até 20
+caracteres no total) e `senha` (texto não vazio, mantendo a regra existente).
+São exatamente quatro campos no formulário; não há confirmação de senha ou endereço.
+O campo `cpf`, se enviado, é ignorado. Novos clientes são gravados com CPF NULL;
+CPFs existentes e sua restrição de unicidade são preservados. Aplicar também
+`db/migrations/005_cliente_cpf_opcional.sql` antes de cadastrar clientes.
+O CPF do funcionário e o cliente técnico Convidado não são alterados.
+E-mail duplicado retorna 400 com `{"erro": "Usuário já cadastrado com este e-mail."}`.
+Falhas internas retornam 503 sem expor SQL. A senha continua armazenada com hash.
+Após criar a conta, o formulário faz `POST /api/v1/login` e abre `/meus-pedidos`,
+mantendo o comportamento anterior. A resposta 201 mantém `cliente.cpf: null`
+por compatibilidade com o formato existente.
+
 ### 1. Auto-cadastro de Cliente
 Cria um novo usuário com o perfil padrão de cliente.
 

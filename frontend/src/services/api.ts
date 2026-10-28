@@ -281,7 +281,6 @@ export const api = {
 
   cadastrarCliente: (dados: {
     nome: string;
-    cpf: string;
     telefone: string;
     email: string;
     senha: string;
