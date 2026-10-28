@@ -17,6 +17,9 @@ const unsplash = (photo: string) =>
 // (db/migrations/004_seed_cardapio_v2.sql). Aqui ficam só as fotos por id.
 // Item que não estiver aqui usa a foto do backend (se houver) ou SEM_FOTO.
 export const FOTOS: Record<string, string> = {
+  "salgada-mussarela": "/produtos/salgada-mussarela.webp",
+  "salgada-chefinho": "/produtos/salgada-chefinho.webp",
+  "doce-chocolate-c-morango": "/produtos/doce-chocolate-c-morango.webp",
   "salgada-marguerita": unsplash("1574071318508-1cdbab80d002"),
   "salgada-calabresa": unsplash("1628840042765-356cda07504e"),
   "salgada-quatro-queijos": unsplash("1513104890138-7c749659a591"),
