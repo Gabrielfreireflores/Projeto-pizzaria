@@ -5,7 +5,10 @@ const BACKEND_URL = process.env.BACKEND_URL ?? "http://127.0.0.1:5000";
 
 const nextConfig = {
   async rewrites() {
-    return [{ source: "/api/:path*", destination: `${BACKEND_URL}/api/:path*` }];
+    return [
+      { source: "/api/:path*", destination: `${BACKEND_URL}/api/:path*` },
+      { source: "/static/uploads/produtos/:path*", destination: `${BACKEND_URL}/static/uploads/produtos/:path*` },
+    ];
   },
   images: {
     remotePatterns: [

@@ -27,6 +27,7 @@ def listar_produtos():
                 'preco': linha[3],
                 'disponivel': linha[4],
                 'foto': linha[5],
+                'descricao': linha[12],
                 'categoria': {
                     'id_categoria': linha[6],
                     'nome': linha[7],
@@ -72,6 +73,7 @@ def criar_produto(data: dict, id_usuario: int):
         'id_categoria': resultado[4],
         'disponivel': resultado[5],
         "foto": resultado[6],
+        'descricao': resultado[7],
         'ingredientes': produto['ingredientes'],
     }
 
@@ -113,6 +115,7 @@ def atualizar_produto(id_produto: int, data: dict, id_usuario: int):
         'id_categoria': resultado[4],
         'disponivel': resultado[5],
         "foto": resultado[6],
+        'descricao': resultado[7],
         'ingredientes': produto['ingredientes'],
     }
 

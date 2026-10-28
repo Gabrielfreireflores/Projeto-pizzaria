@@ -119,3 +119,16 @@ def test_autenticar_usuario_senha_incorreta_deve_falhar():
             
             with pytest.raises(ValueError, match="E-mail ou senha inválidos."):
                 autenticar_usuario("admin@pizzaria.com", "senha_errada")
+
+
+@pytest.mark.parametrize('hash_invalido', [
+    '$2b$10$hash_de_exemplo_funcionario',
+    'metodo-inexistente$salt$hash',
+    '!',
+    None,
+])
+def test_hash_invalido_nao_autentica_nem_expoe_erro_tecnico(hash_invalido):
+    usuario = (2, 'funcionario.exemplo@email.com', True, hash_invalido)
+    with patch('app.services.auth_services.buscar_usuario_por_email', return_value=usuario):
+        with pytest.raises(ValueError, match=r'^E-mail ou senha inválidos\.$'):
+            autenticar_usuario('funcionario.exemplo@email.com', 'qualquer-senha')

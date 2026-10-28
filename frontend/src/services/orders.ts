@@ -36,7 +36,7 @@ function splitAddress(address: string) {
  * que cobram o mesmo produto (ex.: com observações diferentes) viram um item só.
  */
 function toApiItems(items: OrderItem[]) {
-  const grouped = new Map<number, { quantidade: number; partes: { quantidade: number; obs: string }[] }>();
+  const grouped = new Map<number, { quantidade: number; partes: { quantidade: number; obs: string }[]; bordas: Map<number, number> }>();
 
   for (const item of items) {
     if (!item.productId) {
@@ -44,21 +44,26 @@ function toApiItems(items: OrderItem[]) {
         `"${item.name}" está desatualizado. Remova da sacola e adicione de novo.`
       );
     }
-    const entry = grouped.get(item.productId) ?? { quantidade: 0, partes: [] };
+    const entry = grouped.get(item.productId) ?? { quantidade: 0, partes: [], bordas: new Map<number, number>() };
     entry.quantidade += item.quantity;
-    entry.partes.push({ quantidade: item.quantity, obs: item.orderNote ?? "" });
+    entry.partes.push({ quantidade: item.quantity, obs: [item.orderNote, item.border ? `Borda: ${item.border.name}` : ""].filter(Boolean).join(" - ") });
+    if (item.border) entry.bordas.set(item.border.productId, (entry.bordas.get(item.border.productId) ?? 0) + item.quantity);
     grouped.set(item.productId, entry);
   }
 
-  return [...grouped].map(([id_produto, { quantidade, partes }]) => {
+  return [...grouped].map(([id_produto, { quantidade, partes, bordas }]) => {
     const observacao =
       partes.length === 1
         ? partes[0].obs
         : partes.map((p) => `${p.quantidade}x ${p.obs || "sem observação"}`).join(" | ");
+    if (observacao.length > 500) {
+      throw new Error('As observações deste produto ultrapassam 500 caracteres. Reduza as observações na sacola.');
+    }
     return {
       id_produto,
       quantidade,
-      observacao: observacao ? observacao.slice(0, 500) : null,
+      observacao: observacao || null,
+      bordas: [...bordas].map(([id_produto, quantidade]) => ({ id_produto, quantidade })),
     };
   });
 }

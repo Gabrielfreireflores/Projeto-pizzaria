@@ -1,5 +1,6 @@
 from werkzeug.security import generate_password_hash
 from werkzeug.security import check_password_hash
+import psycopg
 
 from app.database import get_connection
 
@@ -10,6 +11,7 @@ from app.repositories.usuario_repository import (
 
 from app.database import get_connection
 from app.repositories.cliente_repository import criar_cliente
+from app.schemas.cliente_schema import validar_cadastro_cliente
 
 
 def cadastrar_usuario(email, senha, nome_perfil, descricao_perfil):
@@ -51,22 +53,9 @@ def cadastrar_usuario(email, senha, nome_perfil, descricao_perfil):
         conn.close()
 
 
-def cadastrar_cliente(email, senha, nome, cpf, telefone=None):
-    email = email.strip().lower()
-    nome = nome.strip()
-    cpf = cpf.strip()
-
-    if email == "" or "@" not in email:
-        raise ValueError("O e-mail não pode ser vazio.")
-
-    if senha == "":
-        raise ValueError("A senha não pode ser vazia.")
-
-    if nome == "":
-        raise ValueError("O nome não pode ser vazio.")
-
-    if cpf == "":
-        raise ValueError("O CPF não pode ser vazio.")
+def cadastrar_cliente(email, senha, nome, telefone=None):
+    dados = validar_cadastro_cliente(email, senha, nome, telefone)
+    email, senha, nome, telefone = (dados[c] for c in ('email', 'senha', 'nome', 'telefone'))
 
     usuario_existente = buscar_usuario_por_email(email)
 
@@ -92,7 +81,7 @@ def cadastrar_cliente(email, senha, nome, cpf, telefone=None):
             conn=conn,
             id_usuario=id_usuario,
             nome=nome,
-            cpf=cpf,
+            cpf=None,
             telefone=telefone
         )
 
@@ -100,6 +89,9 @@ def cadastrar_cliente(email, senha, nome, cpf, telefone=None):
 
         return usuario, cliente
 
+    except psycopg.errors.UniqueViolation:
+        conn.rollback()
+        raise ValueError('Usuário já cadastrado com este e-mail.') from None
     except Exception:
         conn.rollback()
         raise
@@ -115,7 +107,14 @@ def autenticar_usuario(email, senha):
     if usuario is None:
         raise ValueError("E-mail ou senha inválidos.")
 
-    if not check_password_hash(usuario[3], senha):
+    try:
+        senha_valida = isinstance(usuario[3], str) and check_password_hash(usuario[3], senha)
+    except (ValueError, TypeError):
+        # Seeds antigos podem conter um marcador em vez de um hash suportado.
+        # Não autentica e não expõe detalhes do formato da senha ao cliente.
+        senha_valida = False
+
+    if not senha_valida:
         raise ValueError("E-mail ou senha inválidos.")
 
     if usuario[2] is False:

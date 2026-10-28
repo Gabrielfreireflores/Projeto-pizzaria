@@ -78,6 +78,7 @@ export default function CarrinhoPage() {
                           Obs.: {product.note}
                         </p>
                       )}
+                      {product.border && <p className="mt-1 text-xs text-brick">Borda: {product.border.name} (incluída no preço)</p>}
                     </div>
                     <button
                       type="button"

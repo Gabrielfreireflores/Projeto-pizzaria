@@ -8,7 +8,7 @@ def listar_produtos():
             cursor.execute(
                 """SELECT p.id_produto, p.nome, p.tamanho, p.preco, p.disponivel, p.foto,
                           c.id_categoria, c.nome, i.id_ingrediente, i.nome,
-                          ip.quantidade_necessaria, i.unidade_medida
+                          ip.quantidade_necessaria, i.unidade_medida, p.descricao
                 FROM produto p JOIN categoria c ON c.id_categoria = p.id_categoria
                 LEFT JOIN ingrediente_produto ip ON ip.id_produto = p.id_produto
                 LEFT JOIN ingrediente i ON i.id_ingrediente = ip.id_ingrediente
@@ -23,8 +23,9 @@ def buscar_produtos_para_pedido(conn, ids: list):
     with conn.cursor() as cursor:
         # Mantém preço e disponibilidade estáveis até o fim da transação.
         cursor.execute(
-            """SELECT id_produto, preco, disponivel FROM produto
-            WHERE id_produto = ANY(%s) ORDER BY id_produto FOR SHARE""", (ids,)
+            """SELECT p.id_produto, p.preco, p.disponivel, c.nome, p.tamanho
+            FROM produto p JOIN categoria c USING (id_categoria)
+            WHERE p.id_produto = ANY(%s) ORDER BY p.id_produto FOR SHARE OF p, c""", (ids,)
         )
         return cursor.fetchall()
 
@@ -34,11 +35,11 @@ def criar_produto(produto: dict):
     try:
         with conn.cursor() as cursor:
             cursor.execute(
-                """INSERT INTO produto (nome, tamanho, preco, id_categoria, disponivel, foto)
-                VALUES (%s, %s, %s, %s, %s, %s)
-                RETURNING id_produto, nome, tamanho, preco, id_categoria, disponivel, foto""",
+                """INSERT INTO produto (nome, tamanho, preco, id_categoria, disponivel, foto, descricao)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
+                RETURNING id_produto, nome, tamanho, preco, id_categoria, disponivel, foto, descricao""",
                 (produto['nome'], produto['tamanho'], produto['preco'],
-                 produto['id_categoria'], produto['disponivel'], produto.get("foto"),)
+                 produto['id_categoria'], produto['disponivel'], produto.get("foto"), produto.get('descricao'))
             )
             resultado = cursor.fetchone()
             cursor.executemany(
@@ -64,11 +65,13 @@ def atualizar_produto(id_produto: int, produto: dict):
         with conn.cursor() as cursor:
             cursor.execute(
                 """UPDATE produto
-                SET nome = %s, tamanho = %s, preco = %s, id_categoria = %s, disponivel = %s, foto = COALESCE(%s, foto)
+                SET nome = %s, tamanho = %s, preco = %s, id_categoria = %s, disponivel = %s, foto = COALESCE(%s, foto),
+                    descricao = CASE WHEN %s THEN %s ELSE descricao END
                 WHERE id_produto = %s
-                RETURNING id_produto, nome, tamanho, preco, id_categoria, disponivel, foto""",
+                RETURNING id_produto, nome, tamanho, preco, id_categoria, disponivel, foto, descricao""",
                 (produto['nome'], produto['tamanho'], produto['preco'],
-                 produto['id_categoria'], produto['disponivel'], produto.get("foto"), id_produto)
+                 produto['id_categoria'], produto['disponivel'], produto.get("foto"),
+                 'descricao' in produto, produto.get('descricao'), id_produto)
             )
             resultado = cursor.fetchone()
             if resultado is None:

@@ -2,8 +2,11 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { Menu, X, ShoppingBag, User } from "lucide-react";
+import { Menu, X, ShoppingBag, User, Search, ClipboardList } from "lucide-react";
 import { useCart } from "@/hooks/use-cart";
+import { useMenuSearch } from "@/hooks/use-menu-search";
+import { useAuth, ehFuncionario } from "@/hooks/use-auth";
+import { useRouter } from "next/navigation";
 
 const NAV_LINKS = [
   { href: "/#cardapio", label: "Cardápio" },
@@ -15,10 +18,13 @@ const NAV_LINKS = [
 export function Navbar() {
   const [open, setOpen] = useState(false);
   const { itemCount } = useCart();
+  const { query, setQuery } = useMenuSearch();
+  const { usuario } = useAuth();
+  const router = useRouter();
 
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur">
-      <div className="mx-auto flex h-16 max-w-content items-center justify-between px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto flex max-w-content flex-wrap items-center justify-between gap-x-3 gap-y-2 px-4 py-3 sm:px-6 lg:px-8">
         <Link href="/" className="flex items-center gap-2" onClick={() => setOpen(false)}>
           <img
             src="/logo.png"
@@ -32,7 +38,7 @@ export function Navbar() {
           </span>
         </Link>
 
-        <nav className="hidden items-center gap-8 md:flex">
+        <nav className="hidden items-center gap-5 xl:flex">
           {NAV_LINKS.map((link) => (
             <a
               key={link.href}
@@ -44,14 +50,21 @@ export function Navbar() {
           ))}
         </nav>
 
+        <form role="search" onSubmit={e => { e.preventDefault(); router.push('/#cardapio'); }} className="order-last flex w-full items-center gap-2 rounded-lg border border-border bg-background px-3 sm:order-none sm:ml-auto sm:w-64">
+          <Search size={17} className="shrink-0 text-muted-foreground" aria-hidden="true" />
+          <input type="search" aria-label="Busque por um produto" placeholder="Busque por um produto" value={query} onChange={e => setQuery(e.target.value)} className="min-w-0 flex-1 bg-transparent py-2 text-sm outline-none" />
+          <button type="submit" className="sr-only">Buscar</button>
+        </form>
+
         <div className="flex items-center gap-1">
           <Link
-            href="/login"
+            href={usuario ? ehFuncionario(usuario) ? "/funcionario" : "/meus-pedidos" : "/login"}
             aria-label="Entrar na minha conta"
             className="flex h-10 w-10 items-center justify-center rounded-sm text-char/80 transition-colors hover:bg-char/5 hover:text-brick"
           >
             <User className="h-5 w-5" />
           </Link>
+          <Link href="/meus-pedidos" aria-label="Meus pedidos" title="Meus pedidos" className="flex h-10 w-10 items-center justify-center rounded-sm text-char/80 hover:bg-char/5"><ClipboardList className="h-5 w-5" /></Link>
           <Link
             href="/carrinho"
             aria-label="Ver sacola"

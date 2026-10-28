@@ -142,12 +142,12 @@ def criar_produto_controller():
         sucesso = True
         return jsonify(produto), 201
 
+    except produto_services.ProdutoDuplicado as e:
+        return jsonify({"erro": str(e)}), 409
     except ValueError as e:
         return jsonify({"erro": str(e)}), 400
     except PermissionError as e:
         return jsonify({"erro": str(e)}), 403
-    except produto_services.ProdutoDuplicado as e:
-        return jsonify({"erro": str(e)}), 409
     except (psycopg.Error, RuntimeError):
         current_app.logger.exception("Falha ao cadastrar produto.")
         return jsonify({
@@ -181,14 +181,14 @@ def atualizar_produto_controller(id_produto):
         sucesso = True
         return jsonify(produto), 200
 
+    except produto_services.ProdutoDuplicado as e:
+        return jsonify({"erro": str(e)}), 409
     except ValueError as e:
         return jsonify({"erro": str(e)}), 400
     except PermissionError as e:
         return jsonify({"erro": str(e)}), 403
     except produto_services.ProdutoNaoEncontrado as e:
         return jsonify({"erro": str(e)}), 404
-    except produto_services.ProdutoDuplicado as e:
-        return jsonify({"erro": str(e)}), 409
     except (psycopg.Error, RuntimeError):
         current_app.logger.exception("Falha ao atualizar produto.")
         return jsonify({

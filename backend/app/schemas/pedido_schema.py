@@ -51,6 +51,8 @@ def validar_pedido(data: dict):
     if tipo_entrega not in TIPOS_ENTREGA:
         raise ValueError('tipo_entrega deve ser "entrega" ou "retirada".')
     nome = _texto(contato.get('nome'), 'nome', 120)
+    if len(nome.split()) < 2:
+        raise ValueError('Informe nome e sobrenome.')
     telefone = _texto(contato.get('telefone'), 'telefone', 20)
     if (not re.fullmatch(r'[+()\d .-]+', telefone)
             or not 10 <= len(re.sub(r'\D', '', telefone)) <= 15):
@@ -76,8 +78,27 @@ def validar_pedido(data: dict):
         observacao = item.get('observacao')
         if observacao is not None and (not isinstance(observacao, str) or len(observacao) > 500):
             raise ValueError('Observação deve ter até 500 caracteres.')
+        bordas = item.get('bordas', [])
+        if not isinstance(bordas, list) or len(bordas) > 100:
+            raise ValueError('Informe uma lista de até 100 bordas por item.')
+        bordas_normalizadas = []
+        ids_bordas = set()
+        for borda in bordas:
+            if not isinstance(borda, dict):
+                raise ValueError('Cada borda deve ser um objeto.')
+            id_borda, qtd_borda = borda.get('id_produto'), borda.get('quantidade')
+            if type(id_borda) is not int or not 0 < id_borda <= 2147483647:
+                raise ValueError('Produto da borda inválido.')
+            if type(qtd_borda) is not int or not 0 < qtd_borda <= quantidade:
+                raise ValueError('Quantidade da borda inválida.')
+            if id_borda in ids_bordas:
+                raise ValueError('Não repita a mesma borda no item.')
+            ids_bordas.add(id_borda)
+            bordas_normalizadas.append({'id_produto': id_borda, 'quantidade': qtd_borda})
+        if sum(b['quantidade'] for b in bordas_normalizadas) > quantidade:
+            raise ValueError('Selecione no máximo uma borda por pizza.')
         normalizados.append({'id_produto': identificador, 'quantidade': quantidade,
-                             'observacao': observacao})
+                             'observacao': observacao, 'bordas': bordas_normalizadas})
     return {'contato': {'nome': nome, 'telefone': telefone}, 'tipo_entrega': tipo_entrega,
             'endereco': entrega,
             'forma_pagamento': _texto(data.get('forma_pagamento'), 'forma_pagamento', 40),

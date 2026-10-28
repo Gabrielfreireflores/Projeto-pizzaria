@@ -51,6 +51,7 @@ def criar_pedido(data: dict, id_usuario=None, taxa_entrega='0.00'):
         if cliente is None or not cliente[1] or cliente[2].strip().casefold() != 'cliente':
             raise PermissionError('É necessário ter um cadastro de cliente ativo.')
         ids = [item['id_produto'] for item in pedido['itens']]
+        ids += [b['id_produto'] for item in pedido['itens'] for b in item['bordas']]
         produtos = {linha[0]: linha for linha in buscar_produtos_repository(conn, ids)}
         total = taxa
         for item in pedido['itens']:
@@ -65,6 +66,19 @@ def criar_pedido(data: dict, id_usuario=None, taxa_entrega='0.00'):
             item['preco_unitario'] = preco
             item['subtotal'] = preco * item['quantidade']
             total += item['subtotal']
+            for borda in item['bordas']:
+                produto_borda = produtos.get(borda['id_produto'])
+                if (produto[3].strip().casefold() not in ('pizzas salgadas', 'pizzas doces')
+                        or produto_borda is None or not produto_borda[2]
+                        or produto_borda[3].strip().casefold() != 'bordas'
+                        or produto_borda[4] != produto[4]):
+                    raise ValueError('A borda deve estar disponível e ter o mesmo tamanho da pizza.')
+                preco_borda = produto_borda[1]
+                if not preco_borda.is_finite() or preco_borda < 0:
+                    raise RuntimeError('Preço inválido no cadastro da borda.')
+                borda['preco_unitario'] = preco_borda
+                borda['subtotal'] = preco_borda * borda['quantidade']
+                total += borda['subtotal']
             if total > Decimal('9999999999.99'):
                 raise ValueError('Valor total do pedido excede o limite permitido.')
         status = buscar_status_repository(conn, StatusPedido.RECEBIDO.value)
@@ -112,6 +126,16 @@ def listar_pedidos(id_usuario: int):
 
     with transacao_pedido_repository() as conn:
         return listar_pedidos_repository(conn)
+
+
+def listar_meus_pedidos(id_usuario: int):
+    if type(id_usuario) is not int or id_usuario <= 0:
+        raise PermissionError('Autenticação necessária.')
+    with transacao_pedido_repository() as conn:
+        cliente = buscar_cliente_repository(conn, id_usuario)
+        if cliente is None or not cliente[1] or cliente[2].strip().casefold() != 'cliente':
+            raise PermissionError('Acesso exclusivo para clientes ativos.')
+        return listar_pedidos_repository(conn, id_cliente=cliente[0])
 
 
 def aceitar_pedido(id_pedido: int, id_usuario: int):

@@ -128,9 +128,6 @@ export class ApiError extends Error {
 
 const API_URL = "";
 
-const BACKEND_URL =
-  process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://127.0.0.1:5001";
-
 export function urlFotoProduto(foto?: string | null): string | null {
   if (!foto) return null;
 
@@ -138,7 +135,7 @@ export function urlFotoProduto(foto?: string | null): string | null {
     return foto;
   }
 
-  return `${BACKEND_URL}${foto.startsWith("/") ? foto : `/${foto}`}`;
+  return foto.startsWith("/") ? foto : `/${foto}`;
 }
 
 export async function apiFetch<T = any>(
@@ -192,6 +189,7 @@ export type IngredienteProduto = {
 
 export type NovoProduto = {
   nome: string;
+  descricao?: string;
   tamanho: string;
   preco: number | string;
   id_categoria: number;
@@ -237,6 +235,7 @@ function prepararDadosProduto(dados: ProdutoComFoto): BodyInit {
     const formData = new FormData();
 
     formData.append("nome", dados.nome);
+    if (dados.descricao !== undefined) formData.append("descricao", dados.descricao);
     formData.append("tamanho", dados.tamanho);
     formData.append("preco", String(dados.preco));
     formData.append("id_categoria", String(dados.id_categoria));
@@ -281,7 +280,6 @@ export const api = {
 
   cadastrarCliente: (dados: {
     nome: string;
-    cpf: string;
     telefone: string;
     email: string;
     senha: string;
