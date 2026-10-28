@@ -17,6 +17,7 @@ export function MenuSection() {
   const [menu, setMenu] = useState<MenuItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [openId, setOpenId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -91,9 +92,17 @@ export function MenuSection() {
                   <h3 className="text-2xl font-semibold text-char">
                     {CATEGORY_LABEL[category]}
                   </h3>
-                  <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                  <div className="mt-6 grid grid-cols-1 items-start gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                     {items.map((item) => (
-                      <ProductCard key={item.id} item={item} menu={menu} />
+                      <ProductCard
+                        key={item.id}
+                        item={item}
+                        menu={menu}
+                        expanded={openId === item.id}
+                        onToggle={() =>
+                          setOpenId((current) => (current === item.id ? null : item.id))
+                        }
+                      />
                     ))}
                   </div>
                 </div>
