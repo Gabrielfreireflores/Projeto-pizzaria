@@ -173,3 +173,28 @@ def test_cpf_enviado_e_ignorado_e_multiplos_clientes_sem_cpf(ambiente):
     cadastrar(app.test_client(), email='segundo@teste.local')
     assert conn.execute('SELECT count(*) FROM cliente WHERE cpf IS NULL').fetchone()[0] == 2
     assert conn.execute("SELECT is_nullable FROM information_schema.columns WHERE table_schema = current_schema() AND table_name = 'funcionario' AND column_name = 'cpf'").fetchone()[0] == 'NO'
+
+
+def test_aceite_repara_status_legado_e_percorre_fluxo(ambiente):
+    app, conn = ambiente
+    client = app.test_client()
+    pedido = client.post('/api/v1/pedidos', json=payload(conn)).json['id_pedido']
+    conn.execute("UPDATE status SET nome_status = convert_from(convert_to(nome_status, 'UTF8'), 'LATIN1') WHERE nome_status = %s", ('Em preparação',))
+    migration = Path(__file__).resolve().parents[2] / 'db/migrations/007_corrigir_status_preparacao.sql'
+    for _ in range(2):
+        conn.execute(re.sub(r'^\s*(?:BEGIN|COMMIT);\s*$', '', migration.read_text(encoding='utf-8'), flags=re.M))
+    with client.session_transaction() as sess:
+        sess['id_usuario'] = 1
+    assert client.post(f'/api/v1/pedidos/{pedido}/aceitar').status_code == 403
+    assert client.post('/api/v1/login', json={'email': 'funcionario.exemplo@email.com', 'senha': 'teste'}).status_code == 200
+    resposta = client.post(f'/api/v1/pedidos/{pedido}/aceitar')
+    assert resposta.status_code == 200, resposta.json
+    assert resposta.json['status'] == 'Em preparação'
+    funcionario = conn.execute('SELECT id_funcionario FROM funcionario WHERE id_usuario = 2').fetchone()[0]
+    assert conn.execute('SELECT id_funcionario FROM pedido WHERE id_pedido = %s', (pedido,)).fetchone()[0] == funcionario
+    assert client.post(f'/api/v1/pedidos/{pedido}/aceitar').status_code == 409
+    assert client.put(f'/api/v1/pedidos/{pedido}/status', json={'status': 'Entregue'}).status_code == 409
+    for status in ('Saiu para entrega', 'Entregue'):
+        resposta = client.put(f'/api/v1/pedidos/{pedido}/status', json={'status': status})
+        assert resposta.status_code == 200, resposta.json
+        assert resposta.json['status'] == status

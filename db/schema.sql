@@ -1,3 +1,4 @@
+SET client_encoding = 'UTF8';
 -- pizzaria.sql — Pizzaria 
 -- PostgreSQL 15+. 
 --
