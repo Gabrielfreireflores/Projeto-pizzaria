@@ -4,6 +4,8 @@
 
 @layer base {
   :root {
+    --header-h: 72px;
+    --category-nav-h: 66px;
     --background: 40 46% 96%;
     --foreground: 20 20% 13%;
     --char: 20 20% 13%;
@@ -37,4 +39,8 @@
     outline: 2px solid hsl(var(--brick));
     outline-offset: 2px;
   }
+}
+
+@media (min-width: 640px) {
+  :root { --header-h: 96px; }
 }

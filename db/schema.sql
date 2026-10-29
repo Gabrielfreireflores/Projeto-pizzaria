@@ -1,3 +1,4 @@
+SET client_encoding = 'UTF8';
 -- pizzaria.sql — Pizzaria 
 -- PostgreSQL 15+. 
 --
@@ -174,47 +175,10 @@ INSERT INTO categoria (nome, descricao) VALUES
   ('Pizzas', 'Pizzas disponíveis no cardápio'),
   ('Bebidas', 'Bebidas disponíveis no cardápio');
 
-INSERT INTO produto (id_categoria, nome, tamanho, preco, disponivel)
-SELECT id_categoria, 'Pizza de Muçarela', 'Grande', 49.90, TRUE
-FROM categoria
-WHERE nome = 'Pizzas';
-
-INSERT INTO produto (id_categoria, nome, tamanho, preco, disponivel)
-SELECT id_categoria, 'Refrigerante', '2 litros', 12.00, TRUE
-FROM categoria
-WHERE nome = 'Bebidas';
-
 INSERT INTO ingrediente (nome, quantidade_estoque, unidade_medida) VALUES
   ('Massa de pizza', 20.000, 'unidade'),
   ('Molho de tomate', 10.000, 'litro'),
   ('Muçarela', 15.000, 'kg');
-
-INSERT INTO ingrediente_produto
-  (id_produto, id_ingrediente, quantidade_necessaria)
-SELECT p.id_produto, i.id_ingrediente, 1.000
-FROM produto p
-CROSS JOIN ingrediente i
-WHERE p.nome = 'Pizza de Muçarela'
-  AND p.tamanho = 'Grande'
-  AND i.nome = 'Massa de pizza';
-
-INSERT INTO ingrediente_produto
-  (id_produto, id_ingrediente, quantidade_necessaria)
-SELECT p.id_produto, i.id_ingrediente, 0.200
-FROM produto p
-CROSS JOIN ingrediente i
-WHERE p.nome = 'Pizza de Muçarela'
-  AND p.tamanho = 'Grande'
-  AND i.nome = 'Molho de tomate';
-
-INSERT INTO ingrediente_produto
-  (id_produto, id_ingrediente, quantidade_necessaria)
-SELECT p.id_produto, i.id_ingrediente, 0.350
-FROM produto p
-CROSS JOIN ingrediente i
-WHERE p.nome = 'Pizza de Muçarela'
-  AND p.tamanho = 'Grande'
-  AND i.nome = 'Muçarela';
 
 INSERT INTO status (nome_status) VALUES
   ('Recebido'),
@@ -222,38 +186,5 @@ INSERT INTO status (nome_status) VALUES
   ('Saiu para entrega'),
   ('Entregue'),
   ('Cancelado');
-
-INSERT INTO pedido
-  (id_cliente, id_funcionario, id_status, id_endereco,
-   data_hora_pedido, forma_pagamento, taxa_entrega, valor_total)
-SELECT c.id_cliente, f.id_funcionario, s.id_status, e.id_endereco,
-       CURRENT_TIMESTAMP, 'PIX', 5.00, 66.90
-FROM cliente c
-CROSS JOIN funcionario f
-CROSS JOIN status s
-JOIN endereco e ON e.id_cliente = c.id_cliente
-WHERE c.cpf = '123.456.789-00'
-  AND f.cpf = '987.654.321-00'
-  AND s.nome_status = 'Recebido';
-
-INSERT INTO item_pedido
-  (id_pedido, id_produto, quantidade, preco_unitario, subtotal, observacao)
-SELECT pe.id_pedido, pr.id_produto, 1, 49.90, 49.90, 'Sem azeitonas'
-FROM pedido pe
-JOIN cliente c ON c.id_cliente = pe.id_cliente
-CROSS JOIN produto pr
-WHERE c.cpf = '123.456.789-00'
-  AND pr.nome = 'Pizza de Muçarela'
-  AND pr.tamanho = 'Grande';
-
-INSERT INTO item_pedido
-  (id_pedido, id_produto, quantidade, preco_unitario, subtotal, observacao)
-SELECT pe.id_pedido, pr.id_produto, 1, 12.00, 12.00, NULL
-FROM pedido pe
-JOIN cliente c ON c.id_cliente = pe.id_cliente
-CROSS JOIN produto pr
-WHERE c.cpf = '123.456.789-00'
-  AND pr.nome = 'Refrigerante'
-  AND pr.tamanho = '2 litros';
 
 COMMIT;

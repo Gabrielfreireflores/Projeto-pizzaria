@@ -67,7 +67,7 @@ def criar_itens_pedido(conn, id_pedido: int, itens: list):
                 )
 
 
-def listar_pedidos(conn, id_cliente=None):
+def listar_pedidos(conn, id_cliente=None, limite=None):
     with conn.cursor() as cursor:
         cursor.execute(
             """
@@ -98,8 +98,9 @@ def listar_pedidos(conn, id_cliente=None):
             JOIN cliente c ON c.id_cliente = p.id_cliente
             LEFT JOIN endereco e ON e.id_endereco = p.id_endereco
             WHERE (%s::integer IS NULL OR p.id_cliente = %s)
-            ORDER BY p.data_hora_pedido DESC
-            """, (id_cliente, id_cliente),
+            ORDER BY p.data_hora_pedido DESC, p.id_pedido DESC
+            LIMIT %s
+            """, (id_cliente, id_cliente, limite),
         )
         pedidos = cursor.fetchall()
 
@@ -113,13 +114,14 @@ def listar_pedidos(conn, id_cliente=None):
                 ip.preco_unitario,
                 ip.subtotal,
                 ip.observacao,
-                ip.id_item_pedido
+                ip.id_item_pedido,
+                pr.tamanho
             FROM item_pedido ip
             JOIN produto pr ON pr.id_produto = ip.id_produto
             JOIN pedido p ON p.id_pedido = ip.id_pedido
-            WHERE (%s::integer IS NULL OR p.id_cliente = %s)
+            WHERE ip.id_pedido = ANY(%s)
             ORDER BY ip.id_pedido, ip.id_item_pedido
-            """, (id_cliente, id_cliente),
+            """, ([p[0] for p in pedidos],),
         )
         itens = cursor.fetchall()
         cursor.execute(
@@ -129,8 +131,8 @@ def listar_pedidos(conn, id_cliente=None):
             JOIN produto pr ON pr.id_produto = b.id_produto
             JOIN item_pedido ip ON ip.id_item_pedido = b.id_item_pedido
             JOIN pedido p ON p.id_pedido = ip.id_pedido
-            WHERE (%s::integer IS NULL OR p.id_cliente = %s)
-            ORDER BY b.id_item_pedido, b.id_produto""", (id_cliente, id_cliente),
+            WHERE ip.id_pedido = ANY(%s)
+            ORDER BY b.id_item_pedido, b.id_produto""", ([p[0] for p in pedidos],),
         )
         bordas_por_item = {}
         for b in cursor.fetchall():
@@ -144,6 +146,8 @@ def listar_pedidos(conn, id_cliente=None):
         itens_por_pedido.setdefault(item[0], []).append({
             "id_produto": item[1],
             "produto": item[2],
+            "nome": item[2],
+            "tamanho": item[8],
             "quantidade": item[3],
             "preco_unitario": str(item[4]),
             "subtotal": str(item[5]),

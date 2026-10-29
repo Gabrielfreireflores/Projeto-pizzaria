@@ -6,10 +6,9 @@ from app.services import pedido_services
 
 
 def criar_pedido_controller():
-    # Sem sessão = pedido de convidado (checkout do cliente não exige login).
     id_usuario = session.get('id_usuario')
-    if id_usuario is not None and (type(id_usuario) is not int or id_usuario <= 0):
-        return jsonify({'erro': 'Sessão inválida.'}), 401
+    if type(id_usuario) is not int or id_usuario <= 0:
+        return jsonify({'erro': 'Faça login para finalizar o pedido.'}), 401
     try:
         data = request.get_json()
     except (BadRequest, UnsupportedMediaType):

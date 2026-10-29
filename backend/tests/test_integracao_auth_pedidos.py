@@ -489,10 +489,10 @@ def test_cliente_autenticado_cria_pedido(
     assert item[4] == preco * 2
 
 
-def test_pedido_sem_login_e_validado_como_convidado(
+def test_pedido_sem_login_exige_autenticacao(
     client,
 ):
-    # Sem login o pedido segue como convidado; payload inválido => 400 (não mais 401).
+    # Autenticação ocorre antes da validação do payload.
     payload = {
         "itens": [],
         "forma_pagamento": "PIX",
@@ -515,7 +515,7 @@ def test_pedido_sem_login_e_validado_como_convidado(
         json=payload,
     )
 
-    assert resposta.status_code == 400
+    assert resposta.status_code == 401
 
 
 # ============================================================
