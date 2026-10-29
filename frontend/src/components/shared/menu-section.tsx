@@ -14,7 +14,7 @@ const SECTIONS: { category: ProductCategory; id: string }[] = [
 ];
 
 export function MenuSection() {
-  const { query } = useMenuSearch();
+  const { query, setQuery } = useMenuSearch();
   const [menu, setMenu] = useState<MenuItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -67,6 +67,13 @@ export function MenuSection() {
           <p className="mt-8 text-muted-foreground">
             Nenhum item disponível no momento.
           </p>
+        )}
+
+        {!loading && !error && menu.length > 0 && filtered.length === 0 && (
+          <div role="status" className="mt-8 rounded-lg border border-border p-6">
+            <p className="text-char">Nenhum produto encontrado para “{query}”.</p>
+            <button type="button" onClick={() => setQuery("")} className="mt-3 text-sm font-medium text-brick underline">Limpar busca e ver cardápio</button>
+          </div>
         )}
 
         {menu.length > 0 && (

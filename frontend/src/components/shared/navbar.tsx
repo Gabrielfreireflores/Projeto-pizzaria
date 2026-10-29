@@ -37,7 +37,7 @@ export function Navbar() {
             height={72}
             priority
             sizes="(min-width: 640px) 72px, 48px"
-            className="h-12 w-12 shrink-0 object-contain sm:h-[72px] sm:w-[72px]"
+            className="h-12 w-12 shrink-0 rounded-full object-contain sm:h-[72px] sm:w-[72px]"
           />
           <span className="font-display text-sm font-semibold leading-tight sm:text-xl text-char">
             Pizzaria
