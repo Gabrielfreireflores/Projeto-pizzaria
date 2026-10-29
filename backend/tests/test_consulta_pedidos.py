@@ -105,18 +105,14 @@ def http():
     return app.test_client()
 
 
-def test_sem_sessao_cria_pedido_como_convidado(http, payload, monkeypatch):
-    # Sem login o checkout segue como cliente convidado (id_usuario=None).
-    # O service é simulado para o teste não gravar pedido no banco.
-    chamadas = []
-
-    def criar_pedido_falso(data, id_usuario=None, taxa_entrega='0.00'):
-        chamadas.append(id_usuario)
-        return {'id_pedido': 1}
-
-    monkeypatch.setattr(pedido_services, 'criar_pedido', criar_pedido_falso)
-    assert http.post('/api/v1/pedidos', json=payload).status_code == 201
-    assert chamadas == [None]
+def test_sem_sessao_exige_login(http, payload, monkeypatch):
+    from unittest.mock import Mock
+    criar = Mock()
+    monkeypatch.setattr(pedido_services, 'criar_pedido', criar)
+    resposta = http.post('/api/v1/pedidos', json=payload)
+    assert resposta.status_code == 401
+    assert resposta.json == {'erro': 'Faça login para finalizar o pedido.'}
+    criar.assert_not_called()
 
 
 @pytest.mark.parametrize('corpo', ['{', '[]', 'null', '"texto"'])
@@ -264,8 +260,10 @@ def test_perfil_funcionario_do_pr11(client, banco):
         conn.execute("UPDATE usuario SET nome_perfil = 'Funcionário' WHERE id_usuario = 2")
     with client.session_transaction() as sess:
         sess['id_usuario'] = 2
+    with psycopg.connect(banco) as conn:
+        categoria = conn.execute("SELECT id_categoria FROM categoria WHERE nome = 'Categoria de teste'").fetchone()[0]
     resposta = client.post('/api/v1/produtos', json={
-        'nome': 'Produto PR11', 'tamanho': 'Grande', 'preco': '20.00', 'id_categoria': 1,
+        'nome': 'Produto PR11', 'tamanho': 'Grande', 'preco': '20.00', 'id_categoria': categoria,
         'ingredientes': [{'id_ingrediente': 1, 'quantidade_necessaria': '1.000'}],
     })
     assert resposta.status_code == 201

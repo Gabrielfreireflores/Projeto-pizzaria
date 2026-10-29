@@ -1,4 +1,4 @@
-import { api } from "@/lib/api";
+import { api, ApiError } from "@/lib/api";
 import { NewOrder, Order, OrderItem, OrderStatus, PaymentMethod } from "@/types/order";
 
 const PAYMENT_LABEL: Record<PaymentMethod, string> = {
@@ -68,7 +68,7 @@ function toApiItems(items: OrderItem[]) {
   });
 }
 
-/** Cria o pedido no backend (sem login: entra como cliente convidado). */
+/** Cria o pedido para o cliente autenticado; uma sessão expirada preserva a sacola. */
 export async function createOrder(data: NewOrder): Promise<Order> {
   const body = {
     contato: { nome: data.customer.name, telefone: data.customer.phone },
@@ -83,10 +83,18 @@ export async function createOrder(data: NewOrder): Promise<Order> {
     itens: toApiItems(data.items),
   };
 
-  const pedido = await api<ApiPedido>("/api/v1/pedidos", {
-    method: "POST",
-    body: JSON.stringify(body),
-  });
+  let pedido: ApiPedido;
+  try {
+    pedido = await api<ApiPedido>("/api/v1/pedidos", {
+      method: "POST",
+      body: JSON.stringify(body),
+    });
+  } catch (e) {
+    if (e instanceof ApiError && e.status === 401 && typeof window !== "undefined") {
+      window.location.assign("/login?next=/checkout&expirada=1");
+    }
+    throw e;
+  }
 
   return {
     ...data,

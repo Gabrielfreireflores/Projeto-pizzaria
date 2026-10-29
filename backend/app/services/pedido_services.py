@@ -4,7 +4,6 @@ import unicodedata
 from app.models.status_pedido import StatusPedido
 from app.repositories.cliente_repository import (
     buscar_cliente_por_usuario as buscar_cliente_repository,
-    buscar_cliente_convidado as buscar_convidado_repository,
 )
 from app.repositories.endereco_repository import criar_endereco as criar_endereco_repository
 from app.repositories.produto_repository import buscar_produtos_para_pedido as buscar_produtos_repository
@@ -24,9 +23,8 @@ from app.repositories.pedido_repository import (
 )
 
 
-def criar_pedido(data: dict, id_usuario=None, taxa_entrega='0.00'):
-    """id_usuario=None cria o pedido para o cliente técnico "Convidado" (sem login)."""
-    if id_usuario is not None and (type(id_usuario) is not int or id_usuario <= 0):
+def criar_pedido(data: dict, id_usuario, taxa_entrega='0.00'):
+    if type(id_usuario) is not int or id_usuario <= 0:
         raise PermissionError('Cliente autenticado inválido.')
     pedido = validar_pedido_schema(data)
     try:
@@ -41,12 +39,7 @@ def criar_pedido(data: dict, id_usuario=None, taxa_entrega='0.00'):
         taxa = Decimal('0.00')
 
     with transacao_pedido_repository() as conn:
-        if id_usuario is None:
-            cliente = buscar_convidado_repository(conn)
-            if cliente is None:
-                raise RuntimeError('Cliente convidado não configurado (aplicar a migration 003).')
-        else:
-            cliente = buscar_cliente_repository(conn, id_usuario)
+        cliente = buscar_cliente_repository(conn, id_usuario)
         # O PR #11 usa "Cliente"; o seed existente usa "cliente".
         if cliente is None or not cliente[1] or cliente[2].strip().casefold() != 'cliente':
             raise PermissionError('É necessário ter um cadastro de cliente ativo.')
@@ -135,7 +128,7 @@ def listar_meus_pedidos(id_usuario: int):
         cliente = buscar_cliente_repository(conn, id_usuario)
         if cliente is None or not cliente[1] or cliente[2].strip().casefold() != 'cliente':
             raise PermissionError('Acesso exclusivo para clientes ativos.')
-        return listar_pedidos_repository(conn, id_cliente=cliente[0])
+        return listar_pedidos_repository(conn, id_cliente=cliente[0], limite=50)
 
 
 def aceitar_pedido(id_pedido: int, id_usuario: int):

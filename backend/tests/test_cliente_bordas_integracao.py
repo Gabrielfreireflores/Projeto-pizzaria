@@ -90,6 +90,7 @@ def cadastrar(client, cpf='52998224725', email='cliente@teste.local'):
 def test_borda_vinculada_preco_do_banco_e_historico(ambiente):
     app, conn = ambiente
     client = app.test_client()
+    cadastrar(client)
     corpo = payload(conn)
     corpo['itens'][0]['bordas'][0]['preco_unitario'] = '0.01'
     resposta = client.post('/api/v1/pedidos', json=corpo)
@@ -124,7 +125,9 @@ def test_borda_invalida_nao_cria_pedido(ambiente, erro):
     else:
         conn.execute('UPDATE produto SET disponivel = FALSE WHERE id_produto = %s', (borda['id_produto'],))
     antes = conn.execute('SELECT count(*) FROM pedido').fetchone()[0]
-    resposta = app.test_client().post('/api/v1/pedidos', json=corpo)
+    client = app.test_client()
+    cadastrar(client)
+    resposta = client.post('/api/v1/pedidos', json=corpo)
     assert resposta.status_code == 400, resposta.json
     assert conn.execute('SELECT count(*) FROM pedido').fetchone()[0] == antes
 
@@ -137,11 +140,13 @@ def test_cadastro_login_pedido_e_isolamento_de_contas(ambiente):
     assert cpf is None
     resposta = primeiro.post('/api/v1/pedidos', json=payload(conn))
     assert resposta.status_code == 201
+    assert primeiro.get('/api/v1/meus-pedidos').json[0]['endereco'] is None
+    assert primeiro.get('/api/v1/meus-pedidos').json[0]['itens'][0]['tamanho'] == 'Grande'
     assert [p['id_pedido'] for p in primeiro.get('/api/v1/meus-pedidos').json] == [resposta.json['id_pedido']]
     cadastrar(segundo, '11144477735', 'outro@teste.local')
     assert segundo.get('/api/v1/meus-pedidos?id_cliente=' + str(cadastrado['cliente']['id'])).json == []
     assert anonimo.get('/api/v1/meus-pedidos').status_code == 401
-    assert anonimo.post('/api/v1/pedidos', json=payload(conn)).status_code == 201
+    assert anonimo.post('/api/v1/pedidos', json=payload(conn)).status_code == 401
     assert len(primeiro.get('/api/v1/meus-pedidos').json) == 1
     conn.execute('UPDATE usuario SET ativo = FALSE WHERE id_usuario = %s', (cadastrado['usuario']['id'],))
     assert primeiro.get('/api/v1/meus-pedidos').status_code == 403
@@ -175,6 +180,7 @@ def test_cpf_enviado_e_ignorado_e_multiplos_clientes_sem_cpf(ambiente):
 def test_aceite_repara_status_legado_e_percorre_fluxo(ambiente):
     app, conn = ambiente
     client = app.test_client()
+    cadastrar(client)
     pedido = client.post('/api/v1/pedidos', json=payload(conn)).json['id_pedido']
     conn.execute("UPDATE status SET nome_status = convert_from(convert_to(nome_status, 'UTF8'), 'LATIN1') WHERE nome_status = %s", ('Em preparação',))
     migration = Path(__file__).resolve().parents[2] / 'db/migrations/007_corrigir_status_preparacao.sql'
@@ -195,3 +201,20 @@ def test_aceite_repara_status_legado_e_percorre_fluxo(ambiente):
         resposta = client.put(f'/api/v1/pedidos/{pedido}/status', json={'status': status})
         assert resposta.status_code == 200, resposta.json
         assert resposta.json['status'] == status
+
+
+def test_funcionario_nao_cria_nem_consulta_pedidos_de_cliente(ambiente):
+    app, conn = ambiente
+    client = app.test_client()
+    assert client.post('/api/v1/login', json={'email': 'funcionario.exemplo@email.com', 'senha': 'teste'}).status_code == 200
+    assert client.get('/api/v1/meus-pedidos').status_code == 403
+    assert client.post('/api/v1/pedidos', json=payload(conn)).status_code == 403
+
+
+def test_meus_pedidos_limite_e_ordem(ambiente):
+    app, conn = ambiente
+    client = app.test_client()
+    cadastrar(client)
+    ids = [client.post('/api/v1/pedidos', json=payload(conn)).json['id_pedido'] for _ in range(51)]
+    pedidos = client.get('/api/v1/meus-pedidos').json
+    assert [p['id_pedido'] for p in pedidos] == list(reversed(ids))[:50]

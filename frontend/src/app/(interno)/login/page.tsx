@@ -51,7 +51,7 @@
 
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Navbar } from "@/components/shared/navbar";
@@ -67,13 +67,20 @@ export default function LoginPage() {
   const [erro, setErro] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
 
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).has("expirada"))
+      setErro("Sua sessão expirou. Entre novamente para finalizar o pedido. A sacola foi preservada.");
+  }, []);
+
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setErro(null);
     setEnviando(true);
     try {
       const usuario = await login(email, senha);
-      router.push(ehFuncionario(usuario) ? "/funcionario" : "/meus-pedidos");
+      const next = new URLSearchParams(window.location.search).get("next");
+      const destino = next?.startsWith("/") && !next.startsWith("//") && !next.includes("\\") ? next : "/";
+      router.push(ehFuncionario(usuario) ? "/funcionario" : destino);
     } catch (err) {
       setErro(err instanceof Error ? err.message : "Não foi possível entrar.");
     } finally {

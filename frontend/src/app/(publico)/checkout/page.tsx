@@ -1,11 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useState, type FormEvent } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState, type FormEvent } from "react";
 import { useCart } from "@/hooks/use-cart";
-import { useAuth, ehFuncionario } from "@/hooks/use-auth";
+import { useAuth, ehFuncionario, ehCliente } from "@/hooks/use-auth";
 import { Navbar } from "@/components/shared/navbar";
 import { CheckoutFormData, CheckoutFormErrors, Order, PaymentMethod } from "@/types/order";
+import { ApiError } from "@/lib/api";
 import { createOrder } from "@/services/orders";
 
 const money = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -28,7 +30,9 @@ function validate(form: CheckoutFormData): CheckoutFormErrors {
 
 export default function CheckoutPage() {
   const { items, subtotal, clearCart } = useCart();
-  const { usuario } = useAuth();
+  const { usuario, carregando } = useAuth();
+  const router = useRouter();
+  const [restaurado, setRestaurado] = useState(false);
   const [form, setForm] = useState<CheckoutFormData>(INITIAL_FORM);
   const [errors, setErrors] = useState<CheckoutFormErrors>({});
   const [step, setStep] = useState(1);
@@ -36,6 +40,27 @@ export default function CheckoutPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const update = <K extends keyof CheckoutFormData>(key: K, value: CheckoutFormData[K]) => setForm(prev => ({ ...prev, [key]: value }));
+
+  useEffect(() => {
+    try {
+      const saved = sessionStorage.getItem("pizzaria-barriga:checkout");
+      if (saved) setForm({ ...INITIAL_FORM, ...JSON.parse(saved) });
+    } catch { /* O checkout continua se o armazenamento estiver indisponível. */ }
+    setRestaurado(true);
+  }, []);
+
+  useEffect(() => {
+    if (!restaurado) return;
+    try { sessionStorage.setItem("pizzaria-barriga:checkout", JSON.stringify(form)); } catch { /* armazenamento indisponível */ }
+  }, [form, restaurado]);
+
+  useEffect(() => {
+    if (!carregando && !ehCliente(usuario)) router.replace("/login?next=/checkout");
+  }, [usuario, carregando, router]);
+
+  useEffect(() => {
+    if (restaurado && ehCliente(usuario)) setForm(prev => ({ ...prev, name: prev.name || usuario?.nome || "", phone: prev.phone || usuario?.telefone || "" }));
+  }, [usuario, restaurado]);
 
   async function submit(event: FormEvent) {
     event.preventDefault();
@@ -60,9 +85,17 @@ export default function CheckoutPage() {
       });
       setOrder(created);
       clearCart();
-    } catch (e) { setError(e instanceof Error ? e.message : "Não foi possível enviar o pedido."); }
+      try { sessionStorage.removeItem("pizzaria-barriga:checkout"); } catch { /* armazenamento indisponível */ }
+    } catch (e) {
+      if (e instanceof ApiError && e.status === 401) {
+        return; // O serviço redireciona sem apagar a sacola ou o formulário.
+      }
+      setError(e instanceof Error ? e.message : "Não foi possível enviar o pedido.");
+    }
     finally { setSubmitting(false); }
   }
+
+  if (carregando || !ehCliente(usuario)) return <main><Navbar /><p role="status" className="p-8">Entre como cliente para finalizar seu pedido...</p></main>;
 
   if (order) return <main><Navbar /><div className="mx-auto max-w-lg px-4 py-12">
     <div className="rounded-xl border border-border p-6 text-center">
@@ -77,7 +110,7 @@ export default function CheckoutPage() {
       <p className="mt-4 text-lg font-semibold">Total confirmado: {money(order.total)}</p>
       <p className="mt-3 text-sm text-muted-foreground">{order.delivery ? `${order.delivery.address} · ${order.delivery.neighborhood}` : "Retirada no local"}</p>
       <p className="mt-1 text-sm text-muted-foreground">Pagamento: {PAYMENTS.find(p => p.value === order.paymentMethod)?.label}</p>
-      {usuario && !ehFuncionario(usuario) ? <Link href="/meus-pedidos" className="mt-6 block rounded-lg bg-brick p-3 text-background">Acompanhar meu pedido</Link> : <p className="mt-6 text-sm text-muted-foreground">Guarde o número do seu pedido. Para acompanhar próximos pedidos pela conta, <Link href="/cadastro" className="text-brick underline">cadastre-se</Link> e entre antes de pedir.</p>}
+      <Link href="/meus-pedidos" className="mt-6 block rounded-lg bg-brick p-3 text-background">Ver meus pedidos</Link>
       <Link href="/#cardapio" className="mt-5 inline-block text-brick underline">Voltar ao cardápio</Link>
     </div>
   </div></main>;
@@ -93,7 +126,6 @@ export default function CheckoutPage() {
       <form onSubmit={submit} noValidate className="space-y-5 rounded-xl border border-border p-5 lg:col-span-2 sm:p-6">
         {step === 1 && <>
           <h2 className="text-xl font-semibold">Contato e entrega</h2>
-          {!usuario && <p className="text-sm text-muted-foreground">Você pode pedir sem conta. Para acompanhar pela área de pedidos, <Link href="/login" className="text-brick underline">entre</Link> ou <Link href="/cadastro" className="text-brick underline">crie sua conta</Link> antes de confirmar.</p>}
           {ehFuncionario(usuario) && <p role="alert" className="text-sm text-brick">Há uma sessão de funcionário neste navegador. Saia da conta ou use uma janela anônima para pedir como cliente.</p>}
           <label className="block text-sm font-semibold">Nome e sobrenome<input name="nome" autoComplete="name" value={form.name} maxLength={120} onChange={e => update("name", e.target.value)} className={inputClass} aria-invalid={!!errors.name} />{errors.name && <span role="alert" className="mt-1 block text-xs text-brick">{errors.name}</span>}</label>
           <label className="block text-sm font-semibold">Telefone com DDD<input name="telefone" type="tel" autoComplete="tel" value={form.phone} maxLength={20} onChange={e => update("phone", e.target.value)} placeholder="(16) 99999-9999" className={inputClass} aria-invalid={!!errors.phone} />{errors.phone && <span role="alert" className="mt-1 block text-xs text-brick">{errors.phone}</span>}</label>

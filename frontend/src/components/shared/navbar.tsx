@@ -5,7 +5,7 @@ import { useState } from "react";
 import { Menu, X, ShoppingBag, User, Search, ClipboardList } from "lucide-react";
 import { useCart } from "@/hooks/use-cart";
 import { useMenuSearch } from "@/hooks/use-menu-search";
-import { useAuth, ehFuncionario } from "@/hooks/use-auth";
+import { useAuth, ehFuncionario, ehCliente } from "@/hooks/use-auth";
 import { useRouter } from "next/navigation";
 
 const NAV_LINKS = [
@@ -19,7 +19,7 @@ export function Navbar() {
   const [open, setOpen] = useState(false);
   const { itemCount } = useCart();
   const { query, setQuery } = useMenuSearch();
-  const { usuario } = useAuth();
+  const { usuario, logout } = useAuth();
   const router = useRouter();
 
   return (
@@ -64,7 +64,8 @@ export function Navbar() {
           >
             <User className="h-5 w-5" />
           </Link>
-          <Link href="/meus-pedidos" aria-label="Meus pedidos" title="Meus pedidos" className="flex h-10 w-10 items-center justify-center rounded-sm text-char/80 hover:bg-char/5"><ClipboardList className="h-5 w-5" /></Link>
+          {ehCliente(usuario) && <Link href="/meus-pedidos" aria-label="Meus pedidos" title="Meus pedidos" className="flex h-10 w-10 items-center justify-center rounded-sm text-char/80 hover:bg-char/5"><ClipboardList className="h-5 w-5" /><span className="sr-only">Meus pedidos</span></Link>}
+          {usuario ? <button onClick={() => logout()} className="px-2 text-sm text-brick">Sair</button> : <Link href="/login" className="px-2 text-sm text-brick">Entrar</Link>}
           <Link
             href="/carrinho"
             aria-label="Ver sacola"
