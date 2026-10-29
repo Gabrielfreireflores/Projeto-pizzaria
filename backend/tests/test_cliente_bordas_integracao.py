@@ -106,11 +106,8 @@ def test_borda_vinculada_preco_do_banco_e_historico(ambiente):
     assert lista.status_code == 200
     pedido = next(p for p in lista.json if p['id_pedido'] == resposta.json['id_pedido'])
     assert pedido['itens'][0]['bordas'][0]['id_produto'] == borda[0]
-    legado = conn.execute("SELECT id_produto FROM produto WHERE nome = 'Refrigerante'").fetchone()
-    assert legado is not None
-    assert conn.execute('SELECT count(*) FROM item_pedido WHERE id_produto = %s', legado).fetchone()[0] > 0
-    cardapio = client.get('/api/v1/cardapio').json
-    assert not any(p['nome'] == 'Refrigerante' for c in cardapio['categorias'] for p in c['produtos'])
+    assert conn.execute('SELECT count(*) FROM produto').fetchone()[0] == 85
+    assert conn.execute("SELECT count(*) FROM produto WHERE nome = 'Refrigerante'").fetchone()[0] == 0
 
 
 @pytest.mark.parametrize('erro', ['tamanho', 'categoria', 'quantidade', 'indisponivel'])

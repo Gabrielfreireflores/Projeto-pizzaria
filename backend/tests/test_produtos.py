@@ -166,8 +166,8 @@ def test_referencia_inexistente_desfaz_tudo(client, banco, payload, alvo):
         payload['ingredientes'][1]['id_ingrediente'] = 99999
     assert client.post('/api/produtos', json=payload).status_code == 400
     with psycopg.connect(banco) as conn:
-        assert conn.execute('SELECT count(*) FROM produto').fetchone()[0] == 2
-        assert conn.execute('SELECT count(*) FROM ingrediente_produto').fetchone()[0] == 3
+        assert conn.execute('SELECT count(*) FROM produto').fetchone()[0] == 0
+        assert conn.execute('SELECT count(*) FROM ingrediente_produto').fetchone()[0] == 0
 
 
 def test_duplicidade(client, payload):

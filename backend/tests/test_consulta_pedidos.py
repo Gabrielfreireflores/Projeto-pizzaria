@@ -157,9 +157,15 @@ def banco(monkeypatch):
         raiz = Path(__file__).resolve().parents[2]
         with psycopg.connect(dsn, autocommit=True) as conn:
             conn.execute((raiz / 'db/schema.sql').read_text(encoding='utf-8'))
-            migration = (raiz / 'db/migrations/001_pedido_contato.sql').read_text(encoding='utf-8')
-            conn.execute(migration)
-            conn.execute(migration)  # Migração pode ser reaplicada.
+            for arquivo in sorted((raiz / 'db/migrations').glob('*.sql')):
+                conn.execute(arquivo.read_text(encoding='utf-8'))
+            conn.execute("INSERT INTO categoria (nome) VALUES ('Categoria de teste')")
+            conn.execute("""INSERT INTO produto (id_categoria,nome,tamanho,preco)
+                SELECT id_categoria,'Pizza de teste','Grande',49.90 FROM categoria WHERE nome='Categoria de teste'
+                UNION ALL SELECT id_categoria,'Bebida de teste','2 litros',12.00 FROM categoria WHERE nome='Categoria de teste'""")
+            conn.execute("""INSERT INTO ingrediente_produto (id_produto,id_ingrediente,quantidade_necessaria)
+                SELECT p.id_produto,i.id_ingrediente,1.000 FROM produto p CROSS JOIN ingrediente i
+                WHERE p.nome='Pizza de teste'""")
         monkeypatch.setenv('DATABASE_URL', dsn)
         yield dsn
     finally:
@@ -168,7 +174,11 @@ def banco(monkeypatch):
 
 
 @pytest.fixture
-def client(http, banco):
+def client(http, banco, payload):
+    with psycopg.connect(banco) as conn:
+        ids = conn.execute("SELECT id_produto FROM produto WHERE nome IN ('Pizza de teste','Bebida de teste') ORDER BY preco DESC").fetchall()
+    for item, registro in zip(payload['itens'], ids):
+        item['id_produto'] = registro[0]
     with http.session_transaction() as sess:
         sess['id_usuario'] = 1
     return http
@@ -182,11 +192,12 @@ def contagens(banco):
 
 def test_listagem_completa(client, banco):
     with psycopg.connect(banco) as conn:
-        conn.execute('UPDATE produto SET disponivel = FALSE WHERE id_produto = 2')
+        conn.execute("UPDATE produto SET disponivel = FALSE WHERE nome = 'Bebida de teste'")
     resposta = client.get('/api/v1/produtos')
     assert resposta.status_code == 200
-    pizza, bebida = resposta.json['produtos']
-    assert pizza['categoria'] == {'id_categoria': 1, 'nome': 'Pizzas'}
+    pizza = next(p for p in resposta.json['produtos'] if p['nome'] == 'Pizza de teste')
+    bebida = next(p for p in resposta.json['produtos'] if p['nome'] == 'Bebida de teste')
+    assert pizza['categoria']['nome'] == 'Categoria de teste'
     assert pizza['preco'] == '49.90'
     assert len(pizza['ingredientes']) == 3
     assert pizza['ingredientes'][0]['quantidade_necessaria'] == '1.000'
@@ -223,7 +234,7 @@ def test_produto_invalido_nao_grava(client, banco, payload, problema):
         payload['itens'][0]['id_produto'] = 99999
     elif problema == 'indisponivel':
         with psycopg.connect(banco) as conn:
-            conn.execute('UPDATE produto SET disponivel = FALSE WHERE id_produto = 1')
+            conn.execute("UPDATE produto SET disponivel = FALSE WHERE nome = 'Pizza de teste'")
     else:
         payload['itens'][0]['quantidade'] = 2147483647
     assert client.post('/api/v1/pedidos', json=payload).status_code == 400
@@ -266,7 +277,7 @@ def test_rollback_inclui_endereco(client, banco, payload, monkeypatch):
         with conn.cursor() as cursor:
             cursor.execute('''INSERT INTO item_pedido
                 (id_pedido,id_produto,quantidade,preco_unitario,subtotal)
-                VALUES (%s,1,0,1,1)''', (id_pedido,))
+                VALUES (%s,%s,0,1,1)''', (id_pedido,itens[0]['id_produto']))
     monkeypatch.setattr(pedido_services, 'criar_itens_repository', falha)
     assert client.post('/api/v1/pedidos', json=payload).status_code == 503
     assert contagens(banco) == antes

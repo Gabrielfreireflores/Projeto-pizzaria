@@ -77,6 +77,9 @@ def banco(monkeypatch):
             migracao = (raiz / 'db/migrations/002_produto_cardapio.sql').read_text(encoding='utf-8')
             conn.execute(migracao)
             conn.execute(migracao)
+            conn.execute("""INSERT INTO produto (id_categoria,nome,tamanho,preco)
+                SELECT id_categoria,'Pizza de teste','Grande',49.90 FROM categoria WHERE nome='Pizzas'
+                UNION ALL SELECT id_categoria,'Bebida de teste','2 litros',12.00 FROM categoria WHERE nome='Bebidas'""")
         monkeypatch.setenv('DATABASE_URL', dsn)
         yield dsn
     finally:
@@ -86,8 +89,8 @@ def banco(monkeypatch):
 
 def test_banco_filtra_disponiveis_e_preserva_legados(http, banco):
     with psycopg.connect(banco) as conn:
-        conn.execute("UPDATE produto SET disponivel = FALSE WHERE nome = 'Refrigerante'")
-        conn.execute("UPDATE produto SET foto = '/pizza.jpg', descricao = 'Pizza tradicional' WHERE nome = 'Pizza de Muçarela'")
+        conn.execute("UPDATE produto SET disponivel = FALSE WHERE nome = 'Bebida de teste'")
+        conn.execute("UPDATE produto SET foto = '/pizza.jpg', descricao = 'Pizza tradicional' WHERE nome = 'Pizza de teste'")
     resposta = http.get('/api/v1/cardapio')
     assert resposta.status_code == 200
     assert len(resposta.json['categorias']) == 1
