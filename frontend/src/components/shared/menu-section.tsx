@@ -39,7 +39,7 @@ export function MenuSection() {
   }, [load]);
 
   return (
-    <section id="cardapio" className="scroll-mt-32 bg-background py-12 sm:scroll-mt-16 sm:py-16">
+    <section id="cardapio" className="scroll-mt-[calc(var(--header-h)+8px)] bg-background py-12 sm:py-16">
       <div className="mx-auto max-w-content px-4 sm:px-6 lg:px-8">
         <h2 className="text-3xl font-semibold text-char">Cardápio</h2>
         {query.trim() && <p role="status" className="mt-3 text-sm text-muted-foreground">{filtered.length} resultado(s) para “{query.trim()}”</p>}
@@ -73,7 +73,7 @@ export function MenuSection() {
           <>
             <nav
               aria-label="Categorias do cardápio"
-              className="sticky top-28 z-10 -mx-4 mt-4 flex gap-2 overflow-x-auto bg-background/95 px-4 py-3 backdrop-blur sm:top-16 sm:mx-0 sm:px-0"
+              className="sticky top-[var(--header-h)] z-10 -mx-4 mt-4 flex gap-2 overflow-x-auto bg-background/95 px-4 py-3 backdrop-blur sm:mx-0 sm:px-0"
             >
               {SECTIONS.filter(({ category }) =>
                 filtered.some((item) => item.category === category)
@@ -92,7 +92,7 @@ export function MenuSection() {
               const items = filtered.filter((item) => item.category === category);
               if (items.length === 0) return null;
               return (
-                <div key={id} id={id} className="scroll-mt-32 pt-8">
+                <div key={id} id={id} className="scroll-mt-[calc(var(--header-h)+var(--category-nav-h)+8px)] pt-8">
                   <h3 className="text-2xl font-semibold text-char">
                     {CATEGORY_LABEL[category]}
                   </h3>

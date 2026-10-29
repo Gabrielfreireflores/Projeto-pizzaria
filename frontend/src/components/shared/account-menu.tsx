@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { User } from "lucide-react";
 import { ehCliente, ehFuncionario, useAuth } from "@/hooks/use-auth";
 
@@ -11,10 +11,16 @@ export function AccountMenu() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [saindo, setSaindo] = useState(false);
+  const [menuWidth, setMenuWidth] = useState(288);
   const [erro, setErro] = useState("");
   const container = useRef<HTMLDivElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
   const menu = useRef<HTMLDivElement>(null);
+
+  const ajustarLargura = useCallback(() => {
+    const right = trigger.current?.getBoundingClientRect().right ?? window.innerWidth - 16;
+    setMenuWidth(Math.min(288, window.innerWidth - 32, right - 16));
+  }, []);
 
   useEffect(() => { setOpen(false); }, [pathname]);
 
@@ -35,12 +41,14 @@ export function AccountMenu() {
     document.addEventListener("pointerdown", outside);
     document.addEventListener("keydown", escape);
     window.addEventListener("hashchange", close);
+    window.addEventListener("resize", ajustarLargura);
     return () => {
       document.removeEventListener("pointerdown", outside);
       document.removeEventListener("keydown", escape);
       window.removeEventListener("hashchange", close);
+      window.removeEventListener("resize", ajustarLargura);
     };
-  }, [open]);
+  }, [open, ajustarLargura]);
 
   async function sair() {
     setSaindo(true);
@@ -54,11 +62,11 @@ export function AccountMenu() {
     } finally { setSaindo(false); }
   }
 
-  const iconClass = "flex h-10 w-10 shrink-0 items-center justify-center rounded-sm text-char/80 transition-colors hover:bg-char/5 hover:text-brick";
+  const iconClass = "flex h-9 w-9 shrink-0 sm:h-10 sm:w-10 items-center justify-center rounded-sm text-char/80 transition-colors hover:bg-char/5 hover:text-brick";
   if (carregando) return <span aria-label="Verificando conta" className={iconClass}><User className="h-5 w-5" aria-hidden="true" /></span>;
   if (!usuario) return <div className="flex items-center">
     <Link href="/login" aria-label="Entrar na minha conta" className={iconClass}><User className="h-5 w-5" /></Link>
-    <Link href="/login" className="px-2 text-sm text-brick">Entrar</Link>
+    <Link href="/login" className="px-1 text-xs text-brick sm:px-2 sm:text-sm">Entrar</Link>
   </div>;
 
   const nome = usuario.nome?.trim() || usuario.email.split("@")[0];
@@ -69,11 +77,11 @@ export function AccountMenu() {
   return <div ref={container} className="relative" onBlur={event => {
     if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setOpen(false);
   }}>
-    <button ref={trigger} type="button" aria-haspopup="menu" aria-expanded={open} aria-controls="menu-conta" aria-label="Abrir menu da conta" onClick={() => setOpen(prev => !prev)} className="flex h-10 items-center rounded-sm text-char/80 hover:bg-char/5 hover:text-brick">
-      <User className="mx-2.5 h-5 w-5 shrink-0" aria-hidden="true" />
-      <span className="max-w-[10ch] truncate pr-2 text-sm">{partes[0]}</span>
+    <button ref={trigger} type="button" aria-haspopup="menu" aria-expanded={open} aria-controls="menu-conta" aria-label="Abrir menu da conta" onClick={() => { ajustarLargura(); setOpen(prev => !prev); }} className="flex h-9 items-center sm:h-10 rounded-sm text-char/80 hover:bg-char/5 hover:text-brick">
+      <User className="mx-2 h-5 w-5 shrink-0 sm:mx-2.5" aria-hidden="true" />
+      <span className="max-w-[3ch] truncate pr-1 text-sm sm:max-w-[10ch] sm:pr-2">{partes[0]}</span>
     </button>
-    {open && <div ref={menu} id="menu-conta" role="menu" aria-label="Menu da conta" className="absolute right-0 top-full z-50 mt-2 w-72 max-w-[calc(100vw-2rem)] rounded-lg border border-border bg-background shadow-lg">
+    {open && <div ref={menu} id="menu-conta" style={{ width: menuWidth }} role="menu" aria-label="Menu da conta" className="absolute right-0 top-full z-50 mt-2 w-72 max-w-[calc(100vw-2rem)] rounded-lg border border-border bg-background shadow-lg">
       <div role="presentation" className="flex gap-3 p-4">
         <span aria-hidden="true" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brick/10 font-semibold text-brick">{iniciais}</span>
         <div className="min-w-0 flex-1">
