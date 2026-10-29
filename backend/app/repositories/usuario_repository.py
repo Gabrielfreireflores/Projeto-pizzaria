@@ -42,9 +42,12 @@ def buscar_usuario_por_id(id_usuario: int):
     try:
         with conn.cursor() as cursor:
             cursor.execute(
-                """SELECT id_usuario, email, ativo, nome_perfil, descricao
-                FROM usuario
-                WHERE id_usuario = %s""", (id_usuario,)
+                """SELECT u.id_usuario, u.email, u.ativo, u.nome_perfil, u.descricao,
+                          COALESCE(c.nome, f.nome), c.telefone, f.cargo
+                FROM usuario u
+                LEFT JOIN cliente c ON c.id_usuario = u.id_usuario
+                LEFT JOIN funcionario f ON f.id_usuario = u.id_usuario
+                WHERE u.id_usuario = %s""", (id_usuario,)
             )
             resultado = cursor.fetchone()
             return resultado

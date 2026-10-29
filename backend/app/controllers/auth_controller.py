@@ -33,7 +33,10 @@ def usuario_logado_controller():
             "id": usuario[0],
             "email": usuario[1],
             "ativo": usuario[2],
-            "perfil": usuario[3]
+            "perfil": usuario[3],
+            "nome": usuario[5],
+            "telefone": usuario[6],
+            "cargo": usuario[7]
         }
     }), 200
 

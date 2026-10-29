@@ -3,7 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useState, ReactNode } from "react";
 import { api } from "@/services/api";
 
-export type Usuario = { id: number; email: string; ativo: boolean; perfil: string; nome?: string; telefone?: string };
+export type Usuario = { id: number; email: string; ativo: boolean; perfil: string; nome?: string | null; telefone?: string | null; cargo?: string | null };
 
 const semAcento = (t: string) =>
   t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();

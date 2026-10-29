@@ -218,3 +218,18 @@ def test_meus_pedidos_limite_e_ordem(ambiente):
     ids = [client.post('/api/v1/pedidos', json=payload(conn)).json['id_pedido'] for _ in range(51)]
     pedidos = client.get('/api/v1/meus-pedidos').json
     assert [p['id_pedido'] for p in pedidos] == list(reversed(ids))[:50]
+
+
+def test_me_informa_nome_celular_e_cargo_do_banco(ambiente):
+    app, _ = ambiente
+    client = app.test_client()
+    cadastrar(client)
+    usuario = client.get('/api/v1/me').json['usuario']
+    assert usuario['nome'] == 'Cliente Teste'
+    assert usuario['telefone'] == '16999999999'
+    assert usuario['cargo'] is None
+    assert client.post('/api/v1/login', json={'email': 'funcionario.exemplo@email.com', 'senha': 'teste'}).status_code == 200
+    usuario = client.get('/api/v1/me').json['usuario']
+    assert usuario['nome'] == 'Bruno Lima'
+    assert usuario['cargo'] == 'Atendente'
+    assert usuario['telefone'] is None
