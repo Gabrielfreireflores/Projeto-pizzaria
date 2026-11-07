@@ -7,7 +7,6 @@
 
 | Item | Branch/PR | Status |
 |---|---|---|
-
 | Frontend em Next.js (App Router, TypeScript, Tailwind) na pasta `frontend/src/app/(interno)` | `feature/login-frontend` | Funcionando |
 | Login integrado entre frontend e backend (conta de cliente e de funcionário) | `feature/login-frontend` | Funcionando |
 | CRUD de equipe (funcionários), com cadastro dos membros que acessam os pedidos | `feature/equipe-e-autenticacao` | Integrado e funcionando |
