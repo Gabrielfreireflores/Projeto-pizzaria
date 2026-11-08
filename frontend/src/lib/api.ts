@@ -16,7 +16,7 @@ export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
       cache: "no-store",
       credentials: "same-origin",
       ...init,
-      headers: { "Content-Type": "application/json", ...init.headers },
+      headers: { "Content-Type": "application/json", ...init.headers, "X-CSRF-Protection": "1" },
     });
   } catch {
     throw new ApiError("Não foi possível falar com o servidor. Tente novamente.", 0);

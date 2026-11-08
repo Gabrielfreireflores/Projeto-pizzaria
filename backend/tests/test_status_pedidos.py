@@ -1,3 +1,4 @@
+from . import api_client
 from contextlib import contextmanager
 from unittest.mock import MagicMock, Mock
 
@@ -11,7 +12,7 @@ from app.services import pedido_services
 def fluxo(monkeypatch):
     app = create_app()
     app.config.update(TESTING=True, SECRET_KEY='somente-testes')
-    client = app.test_client()
+    client = api_client(app)
     with client.session_transaction() as sess:
         sess['id_usuario'] = 2
 

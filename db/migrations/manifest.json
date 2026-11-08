@@ -1,0 +1,33 @@
+{
+  "format": "sha256-utf8-lf-v1",
+  "files": [
+    {
+      "name": "db/schema.sql",
+      "sha256": "48918cc68ecc254c5d609b6622139e1f07cadd04705f0155c0472e50644b6384"
+    },
+    {
+      "name": "db/migrations/001_pedido_contato.sql",
+      "sha256": "4d37ae6fb53e11f56312a32f1cc1e167968c11d298f9255639b0a22ee1f5e4a3"
+    },
+    {
+      "name": "db/migrations/002_produto_cardapio.sql",
+      "sha256": "471c95db3ea89e6632289e87f6e0cf8f903da810386c5e8839dba8deb0090e57"
+    },
+    {
+      "name": "db/migrations/003_checkout_convidado_retirada.sql",
+      "sha256": "c24bf0363d3849cbd553b8db1a4614ab9b56515c351dbba127e9504c309f3bcc"
+    },
+    {
+      "name": "db/migrations/004_seed_cardapio_v2.sql",
+      "sha256": "519d49ad7a7b480f50420ebceded5e4cfe8af25b6d1f363da0ae4451c6607d77"
+    },
+    {
+      "name": "db/migrations/005_bordas_por_item.sql",
+      "sha256": "f7a12477566ccf6ce5390de782a044e2b4ce757b7e37a88875e429d0f2f369c1"
+    },
+    {
+      "name": "db/migrations/005_cliente_cpf_opcional.sql",
+      "sha256": "8213c8d06a7fd0de395bfe14a5a15020f94c5776076c909adb72bf99d641339b"
+    }
+  ]
+}

@@ -1,21 +1,14 @@
+from app.error_logging import log_internal_error
 
 import json
-import os
-import uuid
 
 import psycopg
-from flask import request, jsonify, session, current_app
+from flask import request, jsonify, session
 from werkzeug.exceptions import BadRequest, UnsupportedMediaType
 
 from app.services import produto_services
-
-
-EXTENSOES_PERMITIDAS = {".jpg", ".jpeg", ".png", ".webp"}
-MIMETYPES_PERMITIDOS = {
-    "image/jpeg",
-    "image/png",
-    "image/webp",
-}
+from app.services.permissoes import exigir_funcionario_ativo
+from app.image_storage import save_product_image, get_image_storage
 
 
 def _ler_dados_produto():
@@ -55,52 +48,19 @@ def _ler_dados_produto():
 
 
 def _salvar_foto(arquivo):
-    """Valida e salva a imagem; retorna o caminho público e o caminho físico."""
-    if not arquivo or not arquivo.filename:
-        return None, None
-
-    nome_original = arquivo.filename
-    extensao = os.path.splitext(nome_original)[1].lower()
-
-    if extensao not in EXTENSOES_PERMITIDAS:
-        raise ValueError("Formato inválido. Use JPG, PNG ou WebP.")
-
-    if arquivo.mimetype not in MIMETYPES_PERMITIDOS:
-        raise ValueError("O arquivo enviado não é uma imagem permitida.")
-
-    pasta = current_app.config["UPLOAD_FOLDER"]
-    os.makedirs(pasta, exist_ok=True)
-
-    nome_arquivo = f"{uuid.uuid4().hex}{extensao}"
-    caminho_fisico = os.path.join(pasta, nome_arquivo)
-
-    # Lê no máximo 5 MB + 1 byte para verificar o tamanho real do arquivo.
-    conteudo = arquivo.stream.read(5 * 1024 * 1024 + 1)
-
-    if len(conteudo) > 5 * 1024 * 1024:
-        raise ValueError("A foto deve ter no máximo 5 MB.")
-
-    if not conteudo:
-        raise ValueError("A imagem enviada está vazia.")
-
-    with open(caminho_fisico, "wb") as destino:
-        destino.write(conteudo)
-
-    caminho_publico = (
-        f'{current_app.config["UPLOAD_URL"]}/{nome_arquivo}'
-    )
-
-    return caminho_publico, caminho_fisico
+    """Valida e salva a imagem; retorna o caminho público e a referência de limpeza."""
+    if arquivo and arquivo.filename:
+        # Autoriza antes de gravar arquivos ou chamar qualquer serviço externo.
+        exigir_funcionario_ativo(session['id_usuario'])
+    return save_product_image(arquivo)
 
 
 def _remover_arquivo(caminho):
-    if caminho and os.path.isfile(caminho):
+    if caminho:
         try:
-            os.remove(caminho)
-        except OSError:
-            current_app.logger.exception(
-                "Não foi possível remover um arquivo de upload."
-            )
+            get_image_storage().delete(caminho)
+        except (OSError, ValueError, RuntimeError):
+            log_internal_error('Não foi possível remover um arquivo de upload.')
 
 
 def _id_usuario_autenticado():
@@ -114,7 +74,7 @@ def listar_produtos_controller():
             "produtos": produto_services.listar_produtos()
         }), 200
     except (psycopg.Error, RuntimeError):
-        current_app.logger.exception("Falha ao listar produtos.")
+        log_internal_error("Falha ao listar produtos.")
         return jsonify({
             "erro": "Não foi possível listar os produtos."
         }), 503
@@ -149,7 +109,7 @@ def criar_produto_controller():
     except PermissionError as e:
         return jsonify({"erro": str(e)}), 403
     except (psycopg.Error, RuntimeError):
-        current_app.logger.exception("Falha ao cadastrar produto.")
+        log_internal_error("Falha ao cadastrar produto.")
         return jsonify({
             "erro": "Não foi possível cadastrar o produto."
         }), 503
@@ -190,7 +150,7 @@ def atualizar_produto_controller(id_produto):
     except produto_services.ProdutoNaoEncontrado as e:
         return jsonify({"erro": str(e)}), 404
     except (psycopg.Error, RuntimeError):
-        current_app.logger.exception("Falha ao atualizar produto.")
+        log_internal_error("Falha ao atualizar produto.")
         return jsonify({
             "erro": "Não foi possível atualizar o produto."
         }), 503
@@ -216,7 +176,7 @@ def excluir_produto_controller(id_produto):
     except produto_services.ProdutoEmUso as e:
         return jsonify({"erro": str(e)}), 409
     except (psycopg.Error, RuntimeError):
-        current_app.logger.exception("Falha ao excluir produto.")
+        log_internal_error("Falha ao excluir produto.")
         return jsonify({
             "erro": "Não foi possível excluir o produto."
         }), 503

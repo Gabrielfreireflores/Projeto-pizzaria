@@ -1,3 +1,4 @@
+from . import api_client
 import uuid
 import pytest
 
@@ -22,7 +23,7 @@ def client(app):
     """
     Cliente HTTP do Flask.
     """
-    return app.test_client()
+    return api_client(app)
 
 
 @pytest.fixture

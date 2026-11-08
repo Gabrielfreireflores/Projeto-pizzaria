@@ -13,3 +13,10 @@ zipp==3.23.1
 psycopg[binary]==3.3.5
 python-dotenv==1.2.3
 Flask-Cors==6.0.5
+
+# Decodificação e validação do conteúdo real dos uploads de imagem.
+Pillow==13.0.0
+
+# SDK Python oficial; a API síncrona preserva a arquitetura Flask.
+vercel-blob==0.5.1
+httpx2==2.16.0

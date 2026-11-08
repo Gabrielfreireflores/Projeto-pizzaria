@@ -1,12 +1,22 @@
-from flask import request, jsonify
+from flask import request, jsonify, session
+from app.services.permissoes import exigir_funcionario_ativo
 from app.services import categoria_services
 from app.exceptions.custom_exceptions import RequisicaoInvalidaError
 
 def criar_categoria_controller():
-    data = request.get_json() or {}
+    id_usuario = session.get('id_usuario')
+    if type(id_usuario) is not int or id_usuario <= 0:
+        return jsonify({'erro': 'Autenticação necessária.'}), 401
+    try:
+        exigir_funcionario_ativo(id_usuario)
+    except PermissionError:
+        return jsonify({'erro': 'Acesso exclusivo de funcionário ativo.'}), 403
+    data = request.get_json()
+    if not isinstance(data, dict):
+        return jsonify({'erro': 'Envie um objeto JSON válido.'}), 400
     nome = data.get('nome','')
 
-    if not nome:
+    if not isinstance(nome, str) or not nome.strip() or len(nome.strip()) > 100:
         raise RequisicaoInvalidaError( "O nome da categoria é obrigatório.")
 
     try:

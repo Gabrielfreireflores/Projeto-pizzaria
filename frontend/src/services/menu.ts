@@ -30,9 +30,12 @@ const CATEGORY_BY_NAME: Record<string, ProductCategory> = {
 // No backend cada tamanho é um produto; "Único" (ou qualquer outro) = preço único.
 const SIZE_BY_LABEL: Record<string, Size> = { pequena: "P", grande: "G" };
 
-// Só aceita foto do backend se o Next puder exibi-la (arquivo local ou Unsplash).
+// Só aceita foto do backend se o Next puder exibi-la (local, Unsplash ou Blob configurado).
+const blobHost = process.env.NEXT_PUBLIC_BLOB_HOST;
+const blobPrefix = blobHost ? `https://${blobHost}/pizzaria/produtos/` : null;
 const fotoValida = (foto: string | null) =>
-  foto && (foto.startsWith("/") || foto.startsWith("https://images.unsplash.com/"))
+  foto && ((foto.startsWith("/") && !foto.startsWith("//"))
+    || foto.startsWith("https://images.unsplash.com/") || (blobPrefix && foto.startsWith(blobPrefix)))
     ? foto
     : undefined;
 

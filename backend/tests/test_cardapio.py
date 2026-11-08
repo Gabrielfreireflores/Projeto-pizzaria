@@ -1,3 +1,4 @@
+from . import api_client
 import os
 import sys
 from decimal import Decimal
@@ -18,7 +19,7 @@ from app.services import cardapio_services
 def http():
     app = create_app()
     app.config.update(TESTING=True)
-    return app.test_client()
+    return api_client(app)
 
 
 def test_publico_vazio(http, monkeypatch):

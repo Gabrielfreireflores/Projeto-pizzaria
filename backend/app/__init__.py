@@ -12,6 +12,8 @@ from app.routes.equipe_routes import equipe_bp
 
 from app.exceptions.custom_exceptions import AppBaseException
 from werkzeug.exceptions import HTTPException
+from app.security import configure_security
+from app.login_rate_limit import configure_login_limits
 
 
 def create_app():
@@ -20,10 +22,12 @@ def create_app():
 
     app = Flask(__name__)
 
-    app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
+    configure_security(app)
+    configure_login_limits(app)
 
     #Limite máximo da requisição: 10 MB
-    app.config["MAX_CONTENT_LENGTH"] = 10*1024*1024
+    # Em produção, inclui todo o multipart e fica abaixo dos 4,5 MB da Vercel.
+    app.config["MAX_CONTENT_LENGTH"] = (4 if app.config['PRODUCTION'] else 10)*1024*1024
 
     #Diretório absoluto para salvar as fotos dos produtos
     app.config["UPLOAD_FOLDER"] = os.path.join(
@@ -33,8 +37,14 @@ def create_app():
         "produtos",
     )
 
-    #Cria a pasta caso não exista
-    os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
+    # A pasta é criada somente ao salvar localmente, sem escrita na importação.
+    app.config['IMAGE_STORAGE'] = os.getenv(
+        'IMAGE_STORAGE', 'disabled' if app.config['PRODUCTION'] else 'local'
+    )
+    if app.config['IMAGE_STORAGE'] not in ('local', 'disabled', 'blob'):
+        raise RuntimeError('IMAGE_STORAGE não possui adaptador configurado.')
+    if app.config['PRODUCTION'] and app.config['IMAGE_STORAGE'] == 'local':
+        raise RuntimeError('Armazenamento local de uploads não é permitido em produção.')
 
     #Endereço público para exibir as fotos
     app.config["UPLOAD_URL"] = "/static/uploads/produtos"
@@ -54,21 +64,22 @@ def create_app():
         Captura QUALQUER exceção que herde de AppBaseException
         e devolve um JSON limpo e padronizado para a API.
         """
-        response = {
-            "erro": error.message
-        }
+        response = {"erro": error.message if error.status_code < 500 else
+                    "Não foi possível concluir a operação."}
+        if error.status_code >= 500:
+            app.logger.error('Falha interna da aplicação (%s).', type(error).__name__)
         return jsonify(response), error.status_code
 
     @app.errorhandler(HTTPException)
     def handle_http_exception(error):
         """Erros HTTP normais (404, 405, 401...) mantêm o status original."""
-        return jsonify({"erro": error.description}), error.code
+        return jsonify({"erro": error.name}), error.code
 
     # (Opcional) Tratador genérico para erros 500 não previstos (ex: Python sintaxe/bugs)
     @app.errorhandler(Exception)
     def handle_unexpected_exception(error):
         # Log do erro no terminal para depuração
-        app.logger.error(f"Erro não tratado: {str(error)}")
+        app.logger.error('Erro não tratado (%s).', type(error).__name__)
         
         response = {
             "erro": "Ocorreu um erro interno inesperado no servidor."
