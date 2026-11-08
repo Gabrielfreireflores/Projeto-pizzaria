@@ -1,3 +1,4 @@
+from . import api_client
 import os
 import re
 import sys
@@ -89,7 +90,7 @@ def cadastrar(client, cpf='52998224725', email='cliente@teste.local'):
 
 def test_borda_vinculada_preco_do_banco_e_historico(ambiente):
     app, conn = ambiente
-    client = app.test_client()
+    client = api_client(app)
     cadastrar(client)
     corpo = payload(conn)
     corpo['itens'][0]['bordas'][0]['preco_unitario'] = '0.01'
@@ -125,7 +126,7 @@ def test_borda_invalida_nao_cria_pedido(ambiente, erro):
     else:
         conn.execute('UPDATE produto SET disponivel = FALSE WHERE id_produto = %s', (borda['id_produto'],))
     antes = conn.execute('SELECT count(*) FROM pedido').fetchone()[0]
-    client = app.test_client()
+    client = api_client(app)
     cadastrar(client)
     resposta = client.post('/api/v1/pedidos', json=corpo)
     assert resposta.status_code == 400, resposta.json
@@ -134,7 +135,7 @@ def test_borda_invalida_nao_cria_pedido(ambiente, erro):
 
 def test_cadastro_login_pedido_e_isolamento_de_contas(ambiente):
     app, conn = ambiente
-    primeiro, segundo, anonimo = (app.test_client() for _ in range(3))
+    primeiro, segundo, anonimo = (api_client(app) for _ in range(3))
     cadastrado = cadastrar(primeiro)
     cpf = conn.execute('SELECT cpf FROM cliente WHERE id_cliente = %s', (cadastrado['cliente']['id'],)).fetchone()[0]
     assert cpf is None
@@ -155,7 +156,7 @@ def test_cadastro_login_pedido_e_isolamento_de_contas(ambiente):
 
 def test_email_duplicado_retorna_mensagem_publica(ambiente):
     app, _ = ambiente
-    client = app.test_client()
+    client = api_client(app)
     cadastrar(client)
     resposta = client.post('/api/v1/clientes', json={
         'nome': 'Outra Pessoa', 'telefone': '16999999999', 'email': 'cliente@teste.local', 'senha': 'teste',
@@ -167,19 +168,19 @@ def test_email_duplicado_retorna_mensagem_publica(ambiente):
 def test_cpf_enviado_e_ignorado_e_multiplos_clientes_sem_cpf(ambiente):
     app, conn = ambiente
     conn.execute("UPDATE cliente SET cpf = '52998224725' WHERE id_cliente = 1")
-    resposta = app.test_client().post('/api/v1/clientes', json={
+    resposta = api_client(app).post('/api/v1/clientes', json={
         'nome': 'Outra Pessoa', 'cpf': '529.982.247-25', 'telefone': '16999999999', 'email': 'novo@teste.local', 'senha': 'teste',
     })
     assert resposta.status_code == 201
     assert resposta.json['cliente']['cpf'] is None
-    cadastrar(app.test_client(), email='segundo@teste.local')
+    cadastrar(api_client(app), email='segundo@teste.local')
     assert conn.execute('SELECT count(*) FROM cliente WHERE cpf IS NULL').fetchone()[0] == 2
     assert conn.execute("SELECT is_nullable FROM information_schema.columns WHERE table_schema = current_schema() AND table_name = 'funcionario' AND column_name = 'cpf'").fetchone()[0] == 'NO'
 
 
 def test_aceite_repara_status_legado_e_percorre_fluxo(ambiente):
     app, conn = ambiente
-    client = app.test_client()
+    client = api_client(app)
     cadastrar(client)
     pedido = client.post('/api/v1/pedidos', json=payload(conn)).json['id_pedido']
     conn.execute("UPDATE status SET nome_status = convert_from(convert_to(nome_status, 'UTF8'), 'LATIN1') WHERE nome_status = %s", ('Em preparação',))
@@ -205,7 +206,7 @@ def test_aceite_repara_status_legado_e_percorre_fluxo(ambiente):
 
 def test_funcionario_nao_cria_nem_consulta_pedidos_de_cliente(ambiente):
     app, conn = ambiente
-    client = app.test_client()
+    client = api_client(app)
     assert client.post('/api/v1/login', json={'email': 'funcionario.exemplo@email.com', 'senha': 'teste'}).status_code == 200
     assert client.get('/api/v1/meus-pedidos').status_code == 403
     assert client.post('/api/v1/pedidos', json=payload(conn)).status_code == 403
@@ -213,7 +214,7 @@ def test_funcionario_nao_cria_nem_consulta_pedidos_de_cliente(ambiente):
 
 def test_meus_pedidos_limite_e_ordem(ambiente):
     app, conn = ambiente
-    client = app.test_client()
+    client = api_client(app)
     cadastrar(client)
     ids = [client.post('/api/v1/pedidos', json=payload(conn)).json['id_pedido'] for _ in range(51)]
     pedidos = client.get('/api/v1/meus-pedidos').json
@@ -222,7 +223,7 @@ def test_meus_pedidos_limite_e_ordem(ambiente):
 
 def test_me_informa_nome_celular_e_cargo_do_banco(ambiente):
     app, _ = ambiente
-    client = app.test_client()
+    client = api_client(app)
     cadastrar(client)
     usuario = client.get('/api/v1/me').json['usuario']
     assert usuario['nome'] == 'Cliente Teste'

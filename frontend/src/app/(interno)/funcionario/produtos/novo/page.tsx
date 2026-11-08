@@ -245,8 +245,8 @@ export default function NovoProdutoPage() {
                 onChange={(e) => {
                   const arquivo = e.target.files?.[0] ?? null;
 
-                  if (arquivo && arquivo.size > 5 * 1024 * 1024) {
-                    setErro("A imagem deve ter no máximo 5 MB.");
+                  if (arquivo && arquivo.size > 3 * 1024 * 1024) {
+                    setErro("A imagem deve ter no máximo 3 MiB.");
                     e.target.value = "";
                     setFoto(null);
                     return;
@@ -259,7 +259,7 @@ export default function NovoProdutoPage() {
               />
 
               <p className="mt-1 text-xs text-muted-foreground">
-                JPG, PNG ou WebP. Tamanho máximo: 5 MB.
+                JPG, PNG ou WebP. Tamanho máximo: 3 MiB.
               </p>
 
               {previsualizacao && (

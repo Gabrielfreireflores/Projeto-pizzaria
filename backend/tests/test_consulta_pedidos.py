@@ -1,3 +1,4 @@
+from . import api_client
 import os
 import sys
 from copy import deepcopy
@@ -102,7 +103,7 @@ def test_normalizacao_sem_mutar_payload(payload):
 def http():
     app = create_app()
     app.config.update(TESTING=True, SECRET_KEY='somente-testes', TAXA_ENTREGA='5.00')
-    return app.test_client()
+    return api_client(app)
 
 
 def test_sem_sessao_exige_login(http, payload, monkeypatch):

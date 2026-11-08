@@ -8,6 +8,8 @@ SET client_encoding = 'UTF8';
 -- Guilherme Fabiano da Silva Gomes — RA: 2840482423037
 -- Gabriel Freire Flores — RA: 2840482423010
 
+BEGIN;
+
 CREATE TABLE usuario (
   id_usuario SERIAL PRIMARY KEY,
   email VARCHAR(160) NOT NULL UNIQUE,

@@ -157,6 +157,7 @@ export async function apiFetch<T = any>(
         ? { "Content-Type": "application/json" }
         : {}),
       ...headers,
+      "X-CSRF-Protection": "1",
     },
   });
 

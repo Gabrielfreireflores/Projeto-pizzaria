@@ -1,5 +1,5 @@
 
-from flask import Blueprint
+from flask import Blueprint, jsonify
 from app.controllers import auth_controller
 from app.controllers import pedido_controller
 
@@ -8,9 +8,8 @@ auth_bp = Blueprint('auth_bp', __name__)
 
 @auth_bp.route('/auth/api/cadastro/funcionario', methods=['POST'])
 def cadastrar_funcionario():
-    return auth_controller.cadastrar_usuario_controller(
-        perfil_padrao="Funcionário"
-    )
+    # O cadastro legítimo permanece em /api/v1/funcionarios, com funcionário ativo.
+    return jsonify({'erro': 'Utilize o cadastro autorizado da equipe.'}), 403
 
 
 @auth_bp.route('/auth/api/cadastro/cliente', methods=['POST'])

@@ -1,3 +1,4 @@
+from . import api_client
 import pytest
 from unittest.mock import patch
 from app import create_app
@@ -10,8 +11,8 @@ def client():
     e disponibiliza um cliente HTTP em memória (test_client).
     """
     app = create_app()
-    app.config['TESTING'] = True
-    with app.test_client() as client:
+    app.config.update(TESTING=True, SECRET_KEY='somente-testes')
+    with api_client(app) as client:
         yield client
 
 
@@ -19,51 +20,20 @@ def client():
 # TESTES DA ROTA DE FUNCIONÁRIO (/auth/cadastro/funcionario)
 # ==============================================================================
 
-def test_rota_cadastrar_funcionario_sucesso(client):
-    """Valida o cadastro com sucesso via POST enviando um JSON válido."""
-    
-    # 1. MOCK DO SERVICE: Simula o retorno de sucesso do cadastrar_usuario
-    usuario_fake = (1, "funcionario@pizzaria.com")
-    with patch('app.services.auth_services.cadastrar_usuario', return_value=usuario_fake) as mock_service:
-        
-        # 2. Executa a requisição POST simulada com JSON no corpo
-        payload = {
-            "email": "funcionario@pizzaria.com",
-            "senha": "senhaSegura123"
-        }
-        resposta = client.post('/auth/api/cadastro/funcionario', json=payload)
-        
-        # 3. VERIFICAÇÕES (ASSERTIONS)
-        # 3.1. Código HTTP deve ser 201 (Created)
-        assert resposta.status_code == 201
-        
-        # 3.2. Estrutura e conteúdo da resposta JSON
-        dados_resposta = resposta.get_json()
-        assert dados_resposta["mensagem"] == "Usuário do perfil 'Funcionário' cadastrado com sucesso."
-        assert dados_resposta["usuario"]["id"] == 1
-        assert dados_resposta["usuario"]["email"] == "funcionario@pizzaria.com"
-        
-        # 3.3. Garante que o Controller injetou o perfil "Funcionário" no Service
-        mock_service.assert_called_once_with(
-            email="funcionario@pizzaria.com",
-            senha="senhaSegura123",
-            nome_perfil="Funcionário",
-            descricao_perfil="Cadastro do perfil Funcionário"
-        )
+def test_rota_cadastrar_funcionario_publico_bloqueado(client):
+    """O endpoint legado nunca cria usuários; o cadastro legítimo usa a equipe."""
+    with patch('app.services.auth_services.cadastrar_usuario') as service:
+        response = client.post('/auth/api/cadastro/funcionario', json={
+            'email': 'funcionario@pizzaria.com', 'senha': 'senhaSegura123',
+        })
+        assert response.status_code == 403
+        service.assert_not_called()
 
 
-def test_rota_cadastrar_funcionario_sem_email_deve_falhar(client):
-    """Valida a falha HTTP 400 quando o campo obrigatório 'email' não é enviado."""
-    payload = {
-        "senha": "senhaSegura123"
-        # Sem campo e-mail
-    }
-    
-    resposta = client.post('/auth/api/cadastro/funcionario', json=payload)
-    
-    assert resposta.status_code == 400
-    dados = resposta.get_json()
-    assert dados["erro"] == "E-mail e senha são campos obrigatórios."
+def test_rota_cadastrar_funcionario_bloqueada_mesmo_com_sessao(client):
+    with client.session_transaction() as sess:
+        sess['id_usuario'] = 1
+    assert client.post('/auth/api/cadastro/funcionario', json={}).status_code == 403
 
 
 # ==============================================================================

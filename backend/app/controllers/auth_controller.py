@@ -1,8 +1,10 @@
-from flask import request, jsonify, session, current_app
+from app.error_logging import log_internal_error
+from flask import request, jsonify, session
 from werkzeug.exceptions import BadRequest, UnsupportedMediaType
 from app.repositories.usuario_repository import buscar_usuario_por_id
 
 from app.services import auth_services
+from app.login_rate_limit import check_login_rate
 
 def logout_controller():
     session.clear()
@@ -41,7 +43,12 @@ def usuario_logado_controller():
     }), 200
 
 def cadastrar_usuario_controller(perfil_padrao: str):
-    data = request.get_json() or {}
+    try:
+        data = request.get_json()
+    except (BadRequest, UnsupportedMediaType):
+        return jsonify({'erro': 'Envie um objeto JSON válido.'}), 400
+    if not isinstance(data, dict):
+        return jsonify({'erro': 'Envie um objeto JSON válido.'}), 400
 
     email = data.get("email", "")
     senha = data.get("senha", "")
@@ -50,7 +57,7 @@ def cadastrar_usuario_controller(perfil_padrao: str):
         f"Cadastro do perfil {perfil_padrao}"
     )
 
-    if not email or not senha:
+    if not isinstance(email, str) or not isinstance(senha, str) or not email.strip() or not senha:
         return jsonify({
             "erro": "E-mail e senha são campos obrigatórios."
         }), 400
@@ -125,20 +132,35 @@ def cadastrar_cliente_controller():
         }), 400
 
     except Exception:
-        current_app.logger.exception('Falha ao cadastrar cliente.')
+        log_internal_error('Falha ao cadastrar cliente.')
         return jsonify({'erro': 'Não foi possível criar sua conta. Tente novamente.'}), 503
 
 
 def login_controller():
-    data = request.get_json() or {}
+    try:
+        data = request.get_json()
+    except (BadRequest, UnsupportedMediaType):
+        return jsonify({'erro': 'Envie um objeto JSON válido.'}), 400
+    if not isinstance(data, dict):
+        return jsonify({'erro': 'Envie um objeto JSON válido.'}), 400
 
     email = data.get("email", "")
     senha = data.get("senha", "")
 
-    if not email or not senha:
+    if not isinstance(email, str) or not isinstance(senha, str) or not email.strip() or not senha:
         return jsonify({
             "erro": "E-mail e senha são obrigatórios."
         }), 400
+
+    try:
+        retry_after = check_login_rate(email)
+    except (RuntimeError, ValueError):
+        log_internal_error('Falha no limitador de login.')
+        return jsonify({'erro': 'Login temporariamente indisponível. Tente novamente.'}), 503
+    if retry_after:
+        return jsonify({'erro': 'Muitas tentativas. Aguarde antes de tentar novamente.'}), 429, {
+            'Retry-After': str(retry_after),
+        }
 
     try:
         usuario = auth_services.autenticar_usuario(
@@ -146,6 +168,7 @@ def login_controller():
             senha=senha
         )
 
+        session.clear()
         session["id_usuario"] = usuario[0]
 
         return jsonify({

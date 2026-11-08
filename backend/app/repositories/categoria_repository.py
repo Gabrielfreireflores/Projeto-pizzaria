@@ -1,3 +1,4 @@
+import psycopg
 from app.database import get_connection
 from app.exceptions.custom_exceptions import ChaveUnicaVioladaError, ErroBancoDadosError
 

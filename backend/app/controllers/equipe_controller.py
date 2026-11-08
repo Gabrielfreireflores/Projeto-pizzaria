@@ -1,3 +1,4 @@
+from app.error_logging import log_internal_error
 import psycopg
 from flask import current_app, jsonify, request, session
 from werkzeug.exceptions import BadRequest, UnsupportedMediaType
@@ -55,7 +56,7 @@ def criar_membro_controller():
     except (PermissionError, ValueError) as e:
         return _responder_erro(e)
     except (psycopg.Error, RuntimeError):
-        current_app.logger.exception(
+        log_internal_error(
             'Falha de banco ao cadastrar funcionário.'
         )
         return jsonify({
@@ -76,10 +77,9 @@ def atualizar_membro_controller(id_funcionario):
     #     return _responder_erro(e)
     except (PermissionError, ValueError, equipe_services.MembroNaoEncontrado) as e:
         current_app.logger.warning(
-            "Erro ao atualizar funcionário %s: %s: %s",
+            "Erro ao atualizar funcionário %s: %s",
             id_funcionario,
             type(e).__name__,
-            str(e),
         )
         return _responder_erro(e)
     except (psycopg.Error, RuntimeError):

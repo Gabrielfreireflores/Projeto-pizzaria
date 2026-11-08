@@ -1,3 +1,4 @@
+from . import api_client
 import os
 from copy import deepcopy
 from pathlib import Path
@@ -80,7 +81,7 @@ def test_duplicidade_http_retorna_409(monkeypatch, payload, metodo, rota, servic
     monkeypatch.setattr(produto_services, servico, duplicado)
     app = create_app()
     app.config.update(TESTING=True, SECRET_KEY='somente-testes')
-    client = app.test_client()
+    client = api_client(app)
     with client.session_transaction() as sess:
         sess['id_usuario'] = 2
     resposta = getattr(client, metodo)(rota, json=payload)
@@ -99,14 +100,14 @@ def test_ingredientes_sao_opcionais(payload, sem_ingredientes):
 def test_sem_autenticacao(payload):
     app = create_app()
     app.config.update(TESTING=True, SECRET_KEY='teste')
-    client = app.test_client()
+    client = api_client(app)
     assert client.post('/api/produtos', json=payload).status_code == 401
 
 
 def test_json_invalido():
     app = create_app()
     app.config.update(TESTING=True, SECRET_KEY='teste')
-    client = app.test_client()
+    client = api_client(app)
     with client.session_transaction() as sess:
         sess['id_usuario'] = 2
     for body in ['{', '[]', 'null']:
@@ -138,7 +139,7 @@ def client(banco, monkeypatch):
     monkeypatch.setenv("DATABASE_URL", banco)
     app = create_app()
     app.config.update(TESTING=True, SECRET_KEY='somente-testes')
-    client = app.test_client()
+    client = api_client(app)
     with client.session_transaction() as sess:
         sess['id_usuario'] = 2
     return client
@@ -192,7 +193,7 @@ def test_categorias_e_produtos_na_mesma_aplicacao(monkeypatch):
     monkeypatch.setattr(categoria_services, 'listar_categorias', lambda: [[1, 'Pizzas']])
     app = create_app()
     app.config.update(TESTING=True, SECRET_KEY='teste')
-    client = app.test_client()
+    client = api_client(app)
     resposta = client.get('/api/categorias')
 
     assert resposta.status_code == 200

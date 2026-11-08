@@ -1,3 +1,4 @@
+from . import api_client
 import pytest
 
 from app import create_app
@@ -14,7 +15,7 @@ def test_me_devolve_dados_da_conta_sem_campos_sensiveis(monkeypatch, perfil, nom
     monkeypatch.setattr(auth_controller, 'buscar_usuario_por_id', lambda _: (
         123, 'conta@teste.local', True, perfil, 'Descricao interna', nome, telefone, cargo,
     ))
-    client = app.test_client()
+    client = api_client(app)
     with client.session_transaction() as sess:
         sess['id_usuario'] = 123
     resposta = client.get('/api/v1/me')

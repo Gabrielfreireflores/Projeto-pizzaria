@@ -1,3 +1,4 @@
+from app.error_logging import log_internal_error
 import psycopg
 from flask import request, jsonify, session, current_app
 from werkzeug.exceptions import BadRequest, UnsupportedMediaType
@@ -22,12 +23,12 @@ def criar_pedido_controller():
         return jsonify({'erro': str(e)}), 403
     except ValueError as e:
         return jsonify({'erro': str(e)}), 400
-    except (psycopg.Error, RuntimeError) as e:
-        current_app.logger.exception(
+    except (psycopg.Error, RuntimeError):
+        log_internal_error(
             'Falha de persistência/configuração ao criar pedido.'
         )
         return jsonify({
-            'erro': str(e)
+            'erro': 'Não foi possível criar o pedido. Tente novamente.'
         }), 503
 
 
@@ -43,7 +44,7 @@ def listar_pedidos_controller():
     except PermissionError as e:
         return jsonify({"erro": str(e)}), 403
     except (psycopg.Error, RuntimeError):
-        current_app.logger.exception("Falha ao listar pedidos.")
+        log_internal_error("Falha ao listar pedidos.")
         return jsonify({"erro": "Não foi possível listar os pedidos."}), 500
 
 
@@ -56,7 +57,7 @@ def listar_meus_pedidos_controller():
     except PermissionError as e:
         return jsonify({'erro': str(e)}), 403
     except (psycopg.Error, RuntimeError):
-        current_app.logger.exception('Falha ao consultar pedidos do cliente.')
+        log_internal_error('Falha ao consultar pedidos do cliente.')
         return jsonify({'erro': 'Não foi possível consultar seus pedidos.'}), 503
 
 
@@ -78,7 +79,7 @@ def aceitar_pedido_controller(id_pedido):
     except ValueError as e:
         return jsonify({"erro": str(e)}), 409
     except (psycopg.Error, RuntimeError):
-        current_app.logger.exception("Falha ao aceitar pedido.")
+        log_internal_error("Falha ao aceitar pedido.")
         return jsonify({"erro": "Não foi possível aceitar o pedido."}), 500
 
 def alterar_status_pedido_controller(id_pedido):
@@ -106,5 +107,5 @@ def alterar_status_pedido_controller(id_pedido):
     except ValueError as e:
         return jsonify({"erro": str(e)}), 400
     except (psycopg.Error, RuntimeError):
-        current_app.logger.exception("Falha ao alterar status do pedido.")
+        log_internal_error("Falha ao alterar status do pedido.")
         return jsonify({"erro": "Não foi possível atualizar o pedido."}), 500

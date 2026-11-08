@@ -1,3 +1,4 @@
+from . import api_client
 from unittest.mock import Mock
 
 import pytest
@@ -18,7 +19,7 @@ def cadastro(monkeypatch):
     monkeypatch.setattr(auth_services, 'criar_cliente', cliente)
     app = create_app()
     app.config.update(TESTING=True, SECRET_KEY='somente-testes')
-    return app.test_client(), conn, usuario, cliente
+    return api_client(app), conn, usuario, cliente
 
 
 @pytest.fixture
