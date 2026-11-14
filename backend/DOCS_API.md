@@ -1,3 +1,19 @@
+# Estado atual — revisão E9/E10 de 13/11/2026
+
+Backend publicado: https://projeto-pizzaria-backend-xi.vercel.app. O navegador usa `/api` no frontend https://projeto-pizzaria-frontend-seven.vercel.app; o Next repassa ao Flask. Entrada serverless `main.py:app`, Python 3.13; `run.py` é somente desenvolvimento.
+
+Login usa sessão e limitação Upstash em produção; não há cadastro público de funcionário. Rotas internas exigem funcionário ativo; criação/consulta dos próprios pedidos exige cliente autenticado. Cadastro público de cliente continua disponível. Escritas exigem `X-CSRF-Protection: 1` e origem permitida. Cookies de produção são Secure, HttpOnly, SameSite=Lax e host-only. Não há CORS amplo.
+
+Imagens novas usam `IMAGE_STORAGE=blob`; arquivo até **3 MiB**, total multipart até **4 MiB em produção**, com validação Pillow. `httpx2` é dependência real do SDK. A URL pública é persistida em `produto.foto`; edição sem foto preserva a atual. Não há limpeza automática de fotos antigas. Segredos e `DATABASE_URL` ficam somente no backend.
+
+Checkout exige cliente autenticado, sem fluxo ativo de convidado; retirada dispensa endereço. Meus pedidos é da própria conta e usa atualização manual na interface, sem estimativa. Não executar migrations/seeds/bootstrap no startup ou deploy; preservar nomes/checksums e o manifesto, com 008 excluída.
+
+Os registros das Etapas 1 e 2 abaixo são históricos: referências a 5 MB, armazenamento desabilitado ou ausência de rate limiting descrevem aquele momento, não a configuração atual. [Resultados reais e limites da validação](../docs/relatorio-testes-final.md) e [índice final](../docs/documentacao-final.md).
+
+---
+
+## Contratos e registros anteriores — consultar primeiro o estado atual acima
+
 ## 🔐 Autenticação/Usuário - Cliente / Funcionário
 
 ## Atualização: cliente, acompanhamento e bordas
@@ -287,4 +303,3 @@ e nunca executa automaticamente ao iniciar o Flask.
 **Pendente:** configurar as contas Free e credenciais somente em etapa autorizada,
 validar cotas/elegibilidade no painel e testar integração real em homologação.
 A homologação não está pronta apenas por os testes com mocks passarem.
-

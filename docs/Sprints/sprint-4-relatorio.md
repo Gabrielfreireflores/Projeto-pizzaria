@@ -1,5 +1,7 @@
 # Relatório de Entrega — Sprint 4 — Pizzaria do Barriga
 
+> Atualização documental de 13/11/2026: o conteúdo abaixo preserva a situação histórica de 06/11/2026 e sua autoria. A entrega posterior de Redis, Blob, deploy e testes frontend está no [relatório final E9](../relatorio-testes-final.md) e na [documentação final E10](../documentacao-final.md); referências antigas a essas pendências não são o estado atual. Não foram inventadas datas de Review nem aprovações.
+
 **Período:** a preencher pela equipe.
 **Sprint Review:** a preencher pela equipe.
 

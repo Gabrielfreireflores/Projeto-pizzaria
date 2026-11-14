@@ -17,3 +17,22 @@
 | 10 | Como funcionário, quero exportar o relatório de vendas em CSV, para que eu envie os dados para contabilidade ou análise externa. | - Exporta os mesmos dados exibidos no dashboard do item 11 | Could | 3 | Sprint 4 |
 | 11 | Como cliente, quero receber notificação por WhatsApp/e-mail quando meu pedido mudar de status, para não precisar ficar atualizando a página. | Fora de escopo neste semestre — ver Documento de Visão, seção 5 | Won't | — | — |
 | 12 | Como funcionário, quero integrar o sistema a máquinas de cartão para pagamento automático, para eliminar a conferência manual. | Fora de escopo neste semestre — ver Documento de Visão, seção 5 | Won't | — | — |
+
+## Conferência final de implementação — 13/11/2026
+
+As histórias, critérios, prioridades e sprints originais acima foram preservados. A situação final não substitui a aprovação do escopo: veja [desvios E10](documentacao-final.md#2-desvios-do-escopo-original-vs-e2b), [testes E9](relatorio-testes-final.md) e [termo final a preencher](termo-aceite-cliente.md).
+
+| História | Situação técnica e limite |
+|---|---|
+| H1 | Cliente/Funcionário, sessão e redirecionamento implementados; limitação distribuída Upstash acrescentada. Não há Gerente separado |
+| H2 | Cadastro e unicidade; ativação/desativação de categoria ausente |
+| H3 | Categoria, preço e N:N implementados; validador permite receita vazia, contrariando o critério original |
+| H4 | Cardápio por categoria e disponibilidade manual; estoque de ingredientes não é calculado |
+| H5 | Quantidades, remoção, total e persistência da sacola implementados; sabores/bordas ampliam o fluxo |
+| H6 | Contato, entrega/retirada e confirmação implementados; versão atual exige cliente autenticado |
+| H7/H8 | Lista periódica, responsável e transições ordenadas implementados e cobertos por testes locais |
+| H9 | Parcial: próprios pedidos e Atualizar; sem previsão ou atualização automática na tela do cliente |
+| H10 | CSV não entregue. A referência original ao dashboard do item 11 é inconsistente: H11 trata de notificações. Não foi criada nem renumerada história para ocultar isso |
+| H11/H12 | Permanecem fora de escopo; nenhum envio automático ou cobrança integrada foi acrescentado |
+
+O requisito de consulta agregada da visão permanece não atendido pelo dashboard planejado. A aceitação da redução depende do professor/cliente e não foi presumida. Os resultados atuais de Redis/frontend não reescrevem as evidências históricas das sprints.

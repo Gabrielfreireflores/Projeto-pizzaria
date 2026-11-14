@@ -1,5 +1,7 @@
 # Ata de Retrospectiva — Sprint 4
 
+> Atualização documental de 13/11/2026: o conteúdo abaixo preserva a situação histórica de 06/11/2026 e sua autoria. A entrega posterior de Redis, Blob, deploy e testes frontend está no [relatório final E9](../relatorio-testes-final.md) e na [documentação final E10](../documentacao-final.md); referências antigas a essas pendências não são o estado atual. Não foram inventadas datas de Review nem aprovações.
+
 **Trilha:** B (Cliente real nº 1)
 
 Equipe: Gabriel Freire Flôres (RA 2840482423010) — Marcelo Augusto Oliveira Jose (RA 2840482423043) — Christian de Lima (RA 2840482523031) — Guilherme Fabiano da Silva Gomes (RA 2840482423037)
