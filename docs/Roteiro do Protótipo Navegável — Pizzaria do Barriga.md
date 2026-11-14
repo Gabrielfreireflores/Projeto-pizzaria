@@ -1,6 +1,6 @@
 # Roteiro do Protótipo Navegável — Pizzaria do Barriga
 
-**Link do protótipo:** [url do Figma/Penpot, com acesso de visualização liberado]
+**Link do protótipo:** [Figma — Pizzaria do Barriga](https://www.figma.com/design/hd8egMUs65MPhKonVAZqMm/Pizzaria-do-Barriga)
 
 https://www.figma.com/design/hd8egMUs65MPhKonVAZqMm/Pizzaria-do-Barriga?node-id=0-1&t=CICJG11ynvcxe2Zv-1
 

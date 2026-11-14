@@ -1,12 +1,14 @@
 # Preparação do deploy acadêmico — Etapa 7.1
 
+> Atualização de 13/11/2026: frontend publicado em https://projeto-pizzaria-frontend-seven.vercel.app e backend em https://projeto-pizzaria-backend-xi.vercel.app. A leitura do cardápio direto e via proxy retornou HTTP 200, com 85 produtos; rotas protegidas recusaram visitante com 401. Este guia de preparação permanece como referência; não representa um novo deploy. [Registro E9](evidencias/e9-e10/validacao-2026-11-13.md).
+
 Somente demonstração acadêmica, sem operação comercial. Usar Vercel Hobby,
 Neon Free, Upstash Free e Blob Hobby, sem trial Pro, cartão ou upgrade pago.
 Esta preparação não publica o projeto nem executa operações nos provedores.
 
 ## Estrutura
 
-Criar futuramente dois projetos Vercel a partir do mesmo repositório:
+A publicação usa dois projetos Vercel a partir do mesmo repositório. Estrutura de referência para reprodução autorizada:
 
 | Projeto | Root Directory | Configuração |
 | --- | --- | --- |
@@ -95,10 +97,12 @@ Por enquanto, usar limpeza individual expressamente autorizada e monitorar a cot
    dados ou objetos; não executar SQL, seed ou migrations para tentar corrigir um deploy.
 
 Limitações da validação local: SDK e psycopg foram verificados no Windows/Python 3.13;
-o build Python Linux da Vercel e seus limites só serão confirmados no deploy autorizado.
+o ambiente Python Linux e suas versões exatas no painel não foram reinspecionados nesta revisão, embora o backend publicado tenha respondido corretamente às leituras.
 O frontend foi compilado localmente com Node 20.19.4; a versão 22.x recomendada para
 o painel ainda requer validação na plataforma. O lint usa as dependências já existentes,
 sem atualização de versões nem instalação nesta etapa.
+
+Neon, login real, Upstash e Blob foram validados nas etapas anteriores conforme resultados informados pelo usuário. O arquivo sintético Blob foi excluído e a ausência confirmada com HTTP 404. Nenhuma operação de escrita nos provedores foi repetida na bateria final. A troca/substituição de fotos ainda pode deixar objetos antigos; não executar limpeza ampla. Para estado atual da entrega e homologação pendente, consultar [documentação final](documentacao-final.md).
 
 Referências oficiais consultadas:
 - https://vercel.com/docs/frameworks/backend/flask
