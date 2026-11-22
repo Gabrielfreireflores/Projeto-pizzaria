@@ -28,7 +28,7 @@ Os RAs são destinados ao controle do professor e não devem ser publicados na p
 - **Organização atendida:** Pizzaria do Barriga, Jardinópolis-SP.
 - **Product Owner acadêmico:** Gabriel Freire Flôres.
 - **Trilha:** B — cliente real nº 1.
-- **Divulgação:** confirmar a autorização do cliente para identificação pública antes do envio da ficha. Nenhuma autorização ou aprovação do cliente é presumida por este documento.
+- **Divulgação:** a identificação pública da pizzaria na Mostra Virtual foi autorizada pela Pizzaria do Barriga, conforme informado pela equipe.
 
 ## Tecnologias
 
@@ -44,7 +44,7 @@ Os RAs são destinados ao controle do professor e não devem ser publicados na p
 
 ## Links
 
-- **Vídeo de demonstração:** pendente — inserir o link público após a publicação pela equipe.
+- **Vídeo de demonstração:** [Pizzaria do Barriga — vídeo da entrega](https://youtu.be/pi3GtfWC59g).
 - **Deploy público:** https://projeto-pizzaria-frontend-seven.vercel.app
 - **Backend:** https://projeto-pizzaria-backend-xi.vercel.app
 - **Repositório:** https://github.com/Gabrielfreireflores/Projeto-pizzaria
@@ -52,9 +52,9 @@ Os RAs são destinados ao controle do professor e não devem ser publicados na p
 
 ## Capa
 
-**Pendente de anexação:** imagem PNG ou JPG em **1280 × 720**, com o nome **Pizzaria do Barriga** legível. Será utilizada como miniatura do vídeo e card do site da mostra.
+![Capa da Mostra Virtual — Pizzaria do Barriga](imagens/mostra-virtual/capa.png)
 
-Nome sugerido para o arquivo: `mostra-virtual-capa.png`. Enviar a imagem junto com o link do vídeo; nenhum arquivo de capa foi criado por esta ficha.
+Capa fornecida pela equipe e armazenada em `docs/imagens/mostra-virtual/capa.png`, com o nome do projeto. O arquivo original foi preservado em **1672 × 941**; a especificação da mostra solicita **1280 × 720**. A adequação de dimensões não foi realizada nesta inclusão.
 
 ## Capturas de tela
 
