@@ -21,8 +21,6 @@ O atendimento por WhatsApp e a anotação de pedidos em papel dificultam a organ
 | Christian de Lima | 2840482523031 | Desenvolvimento frontend da área interna e integração de login, equipe, produtos e pedidos |
 | Guilherme Fabiano da Silva Gomes | 2840482423037 | Desenvolvimento backend, dados, autenticação, categorias e aceite de pedidos; organização do trabalho da equipe |
 
-Os RAs são destinados ao controle do professor e não devem ser publicados na página da mostra.
-
 ## Cliente / PO
 
 - **Organização atendida:** Pizzaria do Barriga, Jardinópolis-SP.
@@ -54,11 +52,9 @@ Os RAs são destinados ao controle do professor e não devem ser publicados na p
 
 ![Capa da Mostra Virtual — Pizzaria do Barriga](imagens/mostra-virtual/capa.png)
 
-Capa fornecida pela equipe e armazenada em `docs/imagens/mostra-virtual/capa.png`, com o nome do projeto. O arquivo original foi preservado em **1672 × 941**; a especificação da mostra solicita **1280 × 720**. A adequação de dimensões não foi realizada nesta inclusão.
 
 ## Capturas de tela
 
-Capturas fornecidas pela equipe em 22/11/2026, armazenadas em `docs/imagens/mostra-virtual/` e preservadas sem edição ou redimensionamento.
 
 ### 1. Página inicial
 
@@ -83,8 +79,6 @@ Capturas fornecidas pela equipe em 22/11/2026, armazenadas em `docs/imagens/most
 ### 6. Produtos na área do funcionário
 
 ![Gestão de produtos com tamanho, preço, categoria e descrição](imagens/mostra-virtual/produtos-funcionario.png)
-
-Para o envio final da mostra, selecionar três capturas conforme a ficha do professor. Os originais acima têm dimensões diferentes de **1920 × 1080**; essa adequação não foi realizada nesta inclusão.
 
 ## Aprendizado da equipe
 
